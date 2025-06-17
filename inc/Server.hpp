@@ -5,6 +5,7 @@
 #include <string>
 #include <exception>
 #include <cstring>
+#include <vector>
 /*
 	above C++ libraries
 	below C style libraries
@@ -14,6 +15,7 @@
 #include <netinet/tcp.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <poll.h>
 
 class	Server {
 	private:
@@ -30,6 +32,11 @@ class	Server {
 		*/
 		int	server_fd;
 		const std::string	server_name = "nsc-irc.local";
+		/*
+			containers for different functionality
+			- keeping track of the poll file descriptors
+		*/
+		std::vector<struct pollfd> polling;
 	public:
 		Server() = delete;
 		Server(const Server &other) = delete;
@@ -104,6 +111,11 @@ class	Server {
 		void	non_blocking();
 		void	assign_address();
 		void	use_to_connect();
+		/*
+			running the actual server
+			taking the clients conenctions
+		*/
+		void	runServer();
 };
 
 

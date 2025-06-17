@@ -1,6 +1,7 @@
 #include "../../inc/Server.hpp"
 
-Server::Server(int ac, char **av) : server_fd(-1) {
+Server::Server(int ac, char **av)
+: server_fd(-1), polling() {
 	try {
 		ac_check(ac);
 		port_check(av);
@@ -117,10 +118,7 @@ void	Server::socket_options() {
 }
 
 void	Server::non_blocking() {
-	int	flag = fcntl(server_fd, F_GETFL, 0);
-	if (flag == -1)
-		throw errorFcntl();
-	flag = fcntl(server_fd, F_SETFL, flag | O_NONBLOCK);
+	int flag = fcntl(server_fd, F_SETFL, O_NONBLOCK);
 	if (flag == -1)
 		throw errorFcntl();
 }
@@ -140,4 +138,15 @@ void	Server::use_to_connect() {
 	int check = listen(server_fd, SOMAXCONN);
 	if (check == -1)
 		throw errorListen();
+}
+
+void	Server::runServer() {
+	std::cout << "Server is running" << std::endl;
+	int client_fd = accept(server_fd, NULL, NULL);
+	if (client_fd != -1) {
+		std::cerr << "Error: 'runServer' accept call failed" << std::endl;
+	}
+	// int check_poll = poll(idk, idk, 10000);
+	// if (check_poll > 0) {
+	// }
 }
