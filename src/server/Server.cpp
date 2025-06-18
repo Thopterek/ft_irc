@@ -1,5 +1,12 @@
 #include "../../inc/Server.hpp"
 
+volatile std::sig_atomic_t g_shutdown = 0;
+
+void	handler(int signum) {
+	static_cast<void>(signum);
+	g_shutdown = 1;
+}
+
 Server::Server(int ac, char **av)
 : server_fd(-1), polling() {
 	try {
@@ -22,6 +29,9 @@ Server::~Server() {
 		close(server_fd);
 		server_fd = -1;
 	}
+	for (auto it = polling.begin(); it != polling.end(); ++it)
+		close(it->fd);
+	polling.clear();
 }
 
 const int	&Server::getPort() const {return (port);}
@@ -76,7 +86,7 @@ void	Server::setupServer() {
 		non_blocking();
 		assign_address();
 		use_to_connect();
-		std::cout << "Server setup went through correctly" << std::endl;
+		std::cout << "Server setup done" << std::endl;
 	} catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		cleanExit();
@@ -88,6 +98,9 @@ void	Server::cleanExit() {
 		close(server_fd);
 		server_fd = -1;
 	}
+	for (auto it = polling.begin(); it != polling.end(); ++it)
+		close(it->fd);
+	polling.clear();
 	exit(EXIT_FAILURE);
 }
 
@@ -145,20 +158,24 @@ void	Server::runError(const std::string &msg) const {
 }
 
 void	Server::acceptingClient() {
-	int client_fd = accept(server_fd, NULL, NULL);
-	if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
-		runError("accept failed rtfm");
-	else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-		return ;
-	else {
-		int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
-		if (flag == -1)
-			runError("fcntl call for new client failed");
+	while (true) {
+		int client_fd = accept(server_fd, NULL, NULL);
+		if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+			runError("accept failed, rtfm");
+			break ;
+		}
+		else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+			return ;
 		else {
-			struct pollfd new_client;
-			new_client.fd = client_fd;
-			new_client.events = POLLIN;
-			polling.push_back(new_client);
+			int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
+			if (flag == -1)
+				runError("fcntl call for new client failed");
+			else {
+				struct pollfd new_client;
+				new_client.fd = client_fd;
+				new_client.events = POLLIN;
+				polling.push_back(new_client);
+			}
 		}
 	}
 }
@@ -186,11 +203,11 @@ void	Server::runServer() {
 	polling_pool.fd = server_fd;
 	polling_pool.events = POLLIN;
 	polling.push_back(polling_pool);
-	while (true) {
+	while (g_shutdown == 0) {
 		int check_poll = poll(polling.data(), polling.size(), -1);
 		if (check_poll == 0)
 			runError("poll timed out before fd was ready");
-		else if (check_poll == -1)
+		else if (check_poll == -1 && g_shutdown == 0)
 			runError("poll returned error, rtfm");
 		else {
 			for (auto it = polling.begin(); it != polling.end(); ++it) {

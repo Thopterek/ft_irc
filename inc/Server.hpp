@@ -4,9 +4,10 @@
 #include <iostream>
 #include <string>
 #include <exception>
-#include <cstring>
 #include <vector>
 #include <cerrno>
+#include <cstring>
+#include <csignal>
 /*
 	above C++ libraries
 	below C style libraries
@@ -17,6 +18,13 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+
+/*
+	handler and actual signal flag
+	to shutdown server gracefully
+*/
+extern volatile std::sig_atomic_t g_shutdown;
+void	handler(int signum);
 
 class	Server {
 	private:
