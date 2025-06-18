@@ -140,13 +140,69 @@ void	Server::use_to_connect() {
 		throw errorListen();
 }
 
-void	Server::runServer() {
-	std::cout << "Server is running" << std::endl;
+void	Server::runError(const std::string &msg) const {
+	std::cerr << "Error: 'runServer' " << msg << std::endl;
+}
+
+void	Server::acceptingClient() {
 	int client_fd = accept(server_fd, NULL, NULL);
-	if (client_fd != -1) {
-		std::cerr << "Error: 'runServer' accept call failed" << std::endl;
+	if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK)
+		runError("accept failed rtfm");
+	else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		return ;
+	else {
+		int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
+		if (flag == -1)
+			runError("fcntl call for new client failed");
+		else {
+			struct pollfd new_client;
+			new_client.fd = client_fd;
+			new_client.events = POLLIN;
+			polling.push_back(new_client);
+		}
 	}
-	// int check_poll = poll(idk, idk, 10000);
-	// if (check_poll > 0) {
-	// }
+}
+
+int	Server::receivingData(const int &sockfd) {
+	std::vector<char>	buffer;
+	buffer.resize(1024);
+	int check_receive = recv(sockfd, buffer.data(), buffer.size(), 0);
+	if (check_receive == -1) {
+		runError("recv didn't proccess the message");
+		close(sockfd);
+		return (EXIT_FAILURE);
+	}
+	else if (check_receive == 0) {
+		close(sockfd);
+		return (EXIT_FAILURE);
+	}
+	for (auto it = buffer.begin(); it != buffer.end(); ++it)
+		std::cout << *it << std::flush;
+	return (EXIT_SUCCESS);
+}
+
+void	Server::runServer() {
+	struct pollfd polling_pool;
+	polling_pool.fd = server_fd;
+	polling_pool.events = POLLIN;
+	polling.push_back(polling_pool);
+	while (true) {
+		int check_poll = poll(polling.data(), polling.size(), -1);
+		if (check_poll == 0)
+			runError("poll timed out before fd was ready");
+		else if (check_poll == -1)
+			runError("poll returned error, rtfm");
+		else {
+			for (auto it = polling.begin(); it != polling.end(); ++it) {
+				if (it->fd == server_fd && it->events == POLLIN && it->revents == POLLIN)
+					acceptingClient();
+				else if (it->fd != server_fd && it->events == POLLIN && it->revents == POLLIN) {
+					if (receivingData(it->fd) == EXIT_FAILURE) {
+						polling.erase(it);
+						break;
+					}
+				}
+			}
+		}
+	}
 }

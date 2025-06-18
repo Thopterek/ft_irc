@@ -6,6 +6,7 @@
 #include <exception>
 #include <cstring>
 #include <vector>
+#include <cerrno>
 /*
 	above C++ libraries
 	below C style libraries
@@ -114,8 +115,15 @@ class	Server {
 		/*
 			running the actual server
 			taking the clients conenctions
-		*/
+			- main caller and the infinite loop
+			- accepting the conneciton
+			- receving the data from members
+			- printing the debug for run
+			*/
 		void	runServer();
+		void	acceptingClient();
+		int	receivingData(const int &sockfd);
+		void	runError(const std::string &msg) const;
 };
 
 
