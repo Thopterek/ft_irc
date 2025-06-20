@@ -18,6 +18,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+/*
+	includes of our headers
+	for different functionality
+*/
+#include "Client.hpp"
+#include "Channel.hpp"
 
 /*
 	handler and actual signal flag
@@ -44,8 +50,11 @@ class	Server {
 		/*
 			containers for different functionality
 			- keeping track of the poll file descriptors
+			- processing all the clients data
 		*/
 		std::vector<struct pollfd> polling;
+		Client	clients;
+		// Channel	channels;
 	public:
 		Server() = delete;
 		Server(const Server &other) = delete;

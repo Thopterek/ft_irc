@@ -8,7 +8,7 @@ void	handler(int signum) {
 }
 
 Server::Server(int ac, char **av)
-: server_fd(-1), polling() {
+: server_fd(-1), polling(), clients() {
 	try {
 		ac_check(ac);
 		port_check(av);
@@ -29,8 +29,11 @@ Server::~Server() {
 		close(server_fd);
 		server_fd = -1;
 	}
-	for (auto it = polling.begin(); it != polling.end(); ++it)
+	// const std::string goodbye = "";
+	for (auto it = polling.begin(); it != polling.end(); ++it) {
+		// int check = send(it->fd, )
 		close(it->fd);
+	}
 	polling.clear();
 }
 
@@ -190,6 +193,7 @@ int	Server::receivingData(const int &sockfd) {
 		return (EXIT_FAILURE);
 	}
 	else if (check_receive == 0) {
+		std::cout << "Client with fd: '" << sockfd << "' disconnected" << std::endl;
 		close(sockfd);
 		return (EXIT_FAILURE);
 	}
@@ -211,9 +215,9 @@ void	Server::runServer() {
 			runError("poll returned error, rtfm");
 		else {
 			for (auto it = polling.begin(); it != polling.end(); ++it) {
-				if (it->fd == server_fd && it->events == POLLIN && it->revents == POLLIN)
+				if (it->fd == server_fd && (it->revents & POLLIN))
 					acceptingClient();
-				else if (it->fd != server_fd && it->events == POLLIN && it->revents == POLLIN) {
+				else if (it->fd != server_fd && it->revents & POLLIN) {
 					if (receivingData(it->fd) == EXIT_FAILURE) {
 						polling.erase(it);
 						break;
