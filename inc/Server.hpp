@@ -15,6 +15,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -135,12 +137,17 @@ class	Server {
 			- main caller and the infinite loop
 			- accepting the conneciton
 			- receving the data from members
-			- printing the debug for run
-			*/
+		*/
 		void	runServer();
 		void	acceptingClient();
 		int	receivingData(const int &sockfd);
-		void	runError(const std::string &msg) const;
+		/*
+			helper function for output
+			- debbuging the runServer
+			- wrapper for sending the msg
+		*/
+		void	runError(const std::string &msg, const int &fd) const;
+		void	sendMsg(std::string msg, int fd);
 };
 
 

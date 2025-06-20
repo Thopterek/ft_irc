@@ -156,27 +156,55 @@ void	Server::use_to_connect() {
 		throw errorListen();
 }
 
-void	Server::runError(const std::string &msg) const {
-	std::cerr << "Error: 'runServer' " << msg << std::endl;
+/*
+	now we are getting to part with running the server
+	everything here is contained in the runServer ft
+*/
+void	Server::runError(const std::string &msg, const int &fd) const {
+	if (fd == 0)
+		std::cerr << "Error: 'runServer' " << msg << std::endl;
+	else
+		std::cerr << "Error: 'runServer' " << msg << " for '" << fd << "'" << std::endl;
+}
+
+void	Server::sendMsg(std::string msg, int fd) {
+	if (fd < 0)
+		return;
+	std::string full = msg + "\r\n";
+	ssize_t	check = send(fd, full.c_str(), full.size(), 0);
+	if (check == -1)
+		runError("MSG failed to be send", fd);
 }
 
 void	Server::acceptingClient() {
+	// std::cout << "we are trying to accept the client" << std::endl;
 	while (true) {
+		// struct	sockaddr_in info;
+		// socklen_t	info_size = sizeof(info);
 		int client_fd = accept(server_fd, NULL, NULL);
 		if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-			runError("accept failed, rtfm");
+			runError("accept failed, rtfm", 0);
 			break ;
 		}
 		else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-			return ;
+			break ;
 		else {
 			int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			if (flag == -1)
-				runError("fcntl call for new client failed");
+			if (flag == -1) {
+				runError("fcntl call for new client failed", client_fd);
+				close(client_fd);
+				continue;
+			}
 			else {
+				// sendMsg("Welcome to our IRC server", client_fd);
 				struct pollfd new_client;
 				new_client.fd = client_fd;
 				new_client.events = POLLIN;
+				// std::string address = inet_ntoa(info.sin_addr);
+				/*
+					adding a user to Client handler
+					using his fd, address and hostname
+				*/
 				polling.push_back(new_client);
 			}
 		}
@@ -184,21 +212,26 @@ void	Server::acceptingClient() {
 }
 
 int	Server::receivingData(const int &sockfd) {
+	// std::cout << "we received the data" << std::endl;
 	std::vector<char>	buffer;
 	buffer.resize(1024);
 	int check_receive = recv(sockfd, buffer.data(), buffer.size(), 0);
 	if (check_receive == -1) {
-		runError("recv didn't proccess the message");
+		runError("recv didn't proccess the message", sockfd);
 		close(sockfd);
+		buffer.clear();
 		return (EXIT_FAILURE);
 	}
 	else if (check_receive == 0) {
 		std::cout << "Client with fd: '" << sockfd << "' disconnected" << std::endl;
+		sendMsg("Goodbye and comeback soon", sockfd);
 		close(sockfd);
+		buffer.clear();
 		return (EXIT_FAILURE);
 	}
 	for (auto it = buffer.begin(); it != buffer.end(); ++it)
 		std::cout << *it << std::flush;
+	buffer.clear();
 	return (EXIT_SUCCESS);
 }
 
@@ -210,18 +243,26 @@ void	Server::runServer() {
 	while (g_shutdown == 0) {
 		int check_poll = poll(polling.data(), polling.size(), -1);
 		if (check_poll == 0)
-			runError("poll timed out before fd was ready");
+			runError("poll timed out before fd was ready", 0);
 		else if (check_poll == -1 && g_shutdown == 0)
-			runError("poll returned error, rtfm");
+			runError("poll returned error, rtfm", 0);
 		else {
 			for (auto it = polling.begin(); it != polling.end(); ++it) {
+				// std::cout << "we are in the for loop" << std::endl;
 				if (it->fd == server_fd && (it->revents & POLLIN))
 					acceptingClient();
-				else if (it->fd != server_fd && it->revents & POLLIN) {
-					if (receivingData(it->fd) == EXIT_FAILURE) {
+				else if (it->fd != server_fd && (it->revents & POLLIN)) {
+					int closed = receivingData(it->fd);
+					if (closed == EXIT_FAILURE) {
 						polling.erase(it);
 						break;
 					}
+				}
+				else if (it->fd != server_fd && (it->revents & POLLHUP)) {
+					sendMsg("Another goodbye", it->fd);
+					close(it->fd);
+					polling.erase(it);
+					break;
 				}
 			}
 		}

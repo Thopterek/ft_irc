@@ -20,7 +20,7 @@ class	Client {
 			above the basic OCF
 			under some basic functions
 		*/
-		void	addUser(const int &fd);
+		// void	addUser(const int &fd, std::string ip, std::string hostname);
 };
 
 #endif
