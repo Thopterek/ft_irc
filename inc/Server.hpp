@@ -132,6 +132,11 @@ class	Server {
 		void	assign_address();
 		void	use_to_connect();
 		/*
+			typedef to check for proper polling
+			without the problem of iterators
+		*/
+		typedef	std::vector<struct pollfd>::iterator iter;
+		/*
 			running the actual server
 			taking the clients conenctions
 			- main caller and the infinite loop
@@ -140,14 +145,16 @@ class	Server {
 		*/
 		void	runServer();
 		void	acceptingClient();
-		int	receivingData(const int &sockfd);
+		iter	receivingData(iter it);
 		/*
 			helper function for output
 			- debbuging the runServer
 			- wrapper for sending the msg
+			- checking which errno is it
 		*/
 		void	runError(const std::string &msg, const int &fd) const;
 		void	sendMsg(std::string msg, int fd);
+		void	recvErrno();
 };
 
 

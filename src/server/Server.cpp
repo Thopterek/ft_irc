@@ -25,14 +25,15 @@ Server::Server(int ac, char **av)
 }
 
 Server::~Server() {
+	for (auto it = polling.begin(); it != polling.end(); ++it) {
+		if (it->fd != server_fd) {
+			sendMsg("Server is closing, see you later", it->fd);
+			close(it->fd);
+		}
+	}
 	if (server_fd >= 0) {
 		close(server_fd);
 		server_fd = -1;
-	}
-	// const std::string goodbye = "";
-	for (auto it = polling.begin(); it != polling.end(); ++it) {
-		// int check = send(it->fd, )
-		close(it->fd);
 	}
 	polling.clear();
 }
@@ -171,13 +172,14 @@ void	Server::sendMsg(std::string msg, int fd) {
 	if (fd < 0)
 		return;
 	std::string full = msg + "\r\n";
-	ssize_t	check = send(fd, full.c_str(), full.size(), 0);
-	if (check == -1)
+	ssize_t	check = send(fd, full.c_str(), full.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		recvErrno();
 		runError("MSG failed to be send", fd);
+	}
 }
 
 void	Server::acceptingClient() {
-	// std::cout << "we are trying to accept the client" << std::endl;
 	while (true) {
 		// struct	sockaddr_in info;
 		// socklen_t	info_size = sizeof(info);
@@ -211,32 +213,56 @@ void	Server::acceptingClient() {
 	}
 }
 
-int	Server::receivingData(const int &sockfd) {
-	// std::cout << "we received the data" << std::endl;
+void	Server::recvErrno() {
+	if (errno == EAGAIN || errno == EWOULDBLOCK)
+		std::cerr << "it was EAGAIN" << std::endl;
+	else if (errno == EBADF)
+		std::cerr << "it was EBADF: sockfd is an invalid fd" << std::endl;
+	else if (errno == ECONNREFUSED)
+		std::cerr << "it was ECONNREFUSED" << std::endl;
+	else if (errno == EFAULT)
+		std::cerr << "it was EFAULT" << std::endl;
+	else if (errno == EINTR)
+		std::cerr << "it was EINTR" << std::endl;
+	else if (errno == EINVAL)
+		std::cerr << "it was EINVAL" << std::endl;
+	else if (errno == ENOTCONN)
+		std::cerr << "it was ENOTCONN: The socket is not connected" << std::endl;
+	else if (errno == ENOTSOCK)
+		std::cerr << "it was ENOTSOCK" << std::endl;
+} 
+
+Server::iter	Server::receivingData(iter it) {
 	std::vector<char>	buffer;
-	buffer.resize(1024);
-	int check_receive = recv(sockfd, buffer.data(), buffer.size(), 0);
+	buffer.resize(512);
+	int check_receive = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
 	if (check_receive == -1) {
-		runError("recv didn't proccess the message", sockfd);
-		close(sockfd);
+		runError("recv didn't proccess the message", it->fd);
+		recvErrno();
+		close(it->fd);
 		buffer.clear();
-		return (EXIT_FAILURE);
+		it = polling.erase(it);
+		it = polling.begin();
+		return (it);
 	}
 	else if (check_receive == 0) {
-		std::cout << "Client with fd: '" << sockfd << "' disconnected" << std::endl;
-		sendMsg("Goodbye and comeback soon", sockfd);
-		close(sockfd);
+		std::cout << "Client with fd: '" << it->fd << "' disconnected" << std::endl;
+		sendMsg("Goodbye and comeback soon", it->fd);
+		close(it->fd);
 		buffer.clear();
-		return (EXIT_FAILURE);
+		it = polling.erase(it);
+		it = polling.begin();
+		return (it);
 	}
-	for (auto it = buffer.begin(); it != buffer.end(); ++it)
-		std::cout << *it << std::flush;
+	for (auto print = buffer.begin(); print != buffer.end(); ++print)
+		std::cout << *print << std::flush;
 	buffer.clear();
-	return (EXIT_SUCCESS);
+	return (it);
 }
 
 void	Server::runServer() {
 	struct pollfd polling_pool;
+	memset(&polling_pool, 0, sizeof(polling_pool));
 	polling_pool.fd = server_fd;
 	polling_pool.events = POLLIN;
 	polling.push_back(polling_pool);
@@ -247,22 +273,11 @@ void	Server::runServer() {
 		else if (check_poll == -1 && g_shutdown == 0)
 			runError("poll returned error, rtfm", 0);
 		else {
-			for (auto it = polling.begin(); it != polling.end(); ++it) {
-				// std::cout << "we are in the for loop" << std::endl;
+			for (iter it = polling.begin(); it != polling.end(); ++it) {
 				if (it->fd == server_fd && (it->revents & POLLIN))
 					acceptingClient();
 				else if (it->fd != server_fd && (it->revents & POLLIN)) {
-					int closed = receivingData(it->fd);
-					if (closed == EXIT_FAILURE) {
-						polling.erase(it);
-						break;
-					}
-				}
-				else if (it->fd != server_fd && (it->revents & POLLHUP)) {
-					sendMsg("Another goodbye", it->fd);
-					close(it->fd);
-					polling.erase(it);
-					break;
+					it = receivingData(it);
 				}
 			}
 		}
