@@ -28,11 +28,13 @@ Server::~Server() {
 	for (auto it = polling.begin(); it != polling.end(); ++it) {
 		if (it->fd != server_fd) {
 			sendMsg("Server is closing, see you later", it->fd);
-			close(it->fd);
+			if (close(it->fd) != 0)
+				runError("close failed for polling at destructor", it->fd);
 		}
 	}
 	if (server_fd >= 0) {
-		close(server_fd);
+		if (close(server_fd) != 0)
+			runError("close failed for server_fd at destructor", server_fd);
 		server_fd = -1;
 	}
 	polling.clear();
@@ -98,12 +100,18 @@ void	Server::setupServer() {
 }
 
 void	Server::cleanExit() {
-	if (server_fd >= 0) {
-		close(server_fd);
-		server_fd = -1;
+	for (auto it = polling.begin(); it != polling.end(); ++it) {
+		if (it->fd != server_fd) {
+			if (close(it->fd) != 0)
+				runError("close in cleanExit for polling", it->fd);
+		}
 	}
-	for (auto it = polling.begin(); it != polling.end(); ++it)
-		close(it->fd);
+	if (server_fd >= 0) {
+		if (close(server_fd) != 0)
+			runError("close in cleanExit for server_fd", server_fd);
+		else
+			server_fd = -1;
+	}
 	polling.clear();
 	exit(EXIT_FAILURE);
 }
@@ -181,9 +189,10 @@ void	Server::sendMsg(std::string msg, int fd) {
 
 void	Server::acceptingClient() {
 	while (true) {
-		// struct	sockaddr_in info;
-		// socklen_t	info_size = sizeof(info);
-		int client_fd = accept(server_fd, NULL, NULL);
+		struct	sockaddr_in client_info;
+		memset(&client_info, 0, sizeof(client_info));
+		socklen_t	info_size = sizeof(client_info);
+		int client_fd = accept(server_fd, reinterpret_cast<struct sockaddr*>(&client_info), &info_size);
 		if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
 			runError("accept failed, rtfm", 0);
 			break ;
@@ -194,7 +203,8 @@ void	Server::acceptingClient() {
 			int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
 			if (flag == -1) {
 				runError("fcntl call for new client failed", client_fd);
-				close(client_fd);
+				if (close(client_fd) != 0)
+					runError("close in acceptingClient", client_fd);
 				continue;
 			}
 			else {
@@ -202,11 +212,8 @@ void	Server::acceptingClient() {
 				struct pollfd new_client;
 				new_client.fd = client_fd;
 				new_client.events = POLLIN;
-				// std::string address = inet_ntoa(info.sin_addr);
-				/*
-					adding a user to Client handler
-					using his fd, address and hostname
-				*/
+				std::string address = inet_ntoa(client_info.sin_addr);
+				std::cout << "new client at: '" << address << "' got accepted" << std::endl;
 				polling.push_back(new_client);
 			}
 		}
@@ -239,7 +246,8 @@ Server::iter	Server::receivingData(iter it) {
 	if (check_receive == -1) {
 		runError("recv didn't proccess the message", it->fd);
 		recvErrno();
-		close(it->fd);
+		if (close(it->fd) != 0)
+			runError("close in receivingData", it->fd);
 		buffer.clear();
 		it = polling.erase(it);
 		it = polling.begin();
@@ -248,7 +256,8 @@ Server::iter	Server::receivingData(iter it) {
 	else if (check_receive == 0) {
 		std::cout << "Client with fd: '" << it->fd << "' disconnected" << std::endl;
 		sendMsg("Goodbye and comeback soon", it->fd);
-		close(it->fd);
+		if (close(it->fd) != 0)
+			runError("close in receivingData", it->fd);
 		buffer.clear();
 		it = polling.erase(it);
 		it = polling.begin();
@@ -276,9 +285,8 @@ void	Server::runServer() {
 			for (iter it = polling.begin(); it != polling.end(); ++it) {
 				if (it->fd == server_fd && (it->revents & POLLIN))
 					acceptingClient();
-				else if (it->fd != server_fd && (it->revents & POLLIN)) {
+				else if (it->fd != server_fd && (it->revents & POLLIN))
 					it = receivingData(it);
-				}
 			}
 		}
 	}

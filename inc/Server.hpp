@@ -148,7 +148,7 @@ class	Server {
 		iter	receivingData(iter it);
 		/*
 			helper function for output
-			- debbuging the runServer
+			- debbuging the runServer / cleaning stage
 			- wrapper for sending the msg
 			- checking which errno is it
 		*/
