@@ -15,6 +15,7 @@
 
 #include <iostream>
 #include <string>
+#include <exception>
 #include <string_view>
 #include "Client.hpp"
 
@@ -31,7 +32,7 @@ class   User
 {
     const int           m_socketFd;
     int                 m_channelCount {0};
-    RegStatus   m_status;
+    RegStatus           m_status;
     const std::string   m_userIp, m_hostName;
     std::string         m_nickName, m_userName, m_realName;
   public:
@@ -54,8 +55,10 @@ class   User
     RegStatus   getStatus() const;
     int         getChannelCount() const;
 
-    void    incrementChannelCount();
-    void    decrementChannelCount();
+    std::string getPrefix() const;
+    void        incrementChannelCount();
+    void        decrementChannelCount();
+    void        sendMsg(std::string_view);
    };
 
 #endif

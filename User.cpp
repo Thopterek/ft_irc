@@ -67,6 +67,18 @@ int User::getSocketFd() const
     return (m_socketFd);
 }
 
+std::string User::getPrefix() const
+{
+   //TODO
+    return ("");
+}
+
+void    User::sendMsg(std::string_view msg)
+{
+    if (send(m_socketFd, msg.data(), msg.length(), 0) == -1)
+        throw   std::runtime_error("Unable to send message");
+}
+
 int User::getChannelCount() const
 {
     return (m_channelCount);
