@@ -32,6 +32,11 @@ void    User::setRealName(std::string_view realName)
     m_realName = realName;
 }
 
+void    User::setBuffer(std::string_view buffer)
+{
+    m_buffer = buffer;
+}
+
 void    User::setStatus(RegStatus status)
 {
     m_status = status;
@@ -62,6 +67,11 @@ std::string User::getHostName() const
     return (m_hostName);
 }
 
+std::string User::getBuffer() const
+{
+    return (m_buffer);
+}
+
 int User::getSocketFd() const
 {
     return (m_socketFd);
@@ -69,8 +79,18 @@ int User::getSocketFd() const
 
 std::string User::getPrefix() const
 {
-   //TODO
-    return ("");
+    std::string prefix {m_nickName.empty() ? "*" : ":" + m_nickName};
+
+    if (!m_userName.empty())
+        prefix += ("!" + m_userName);
+    if (!m_hostName.empty())
+        prefix += ("@" + m_hostName);
+    return (prefix);
+}
+
+void    User::buffer(std::string_view input)
+{
+    m_buffer += input;
 }
 
 void    User::sendMsg(std::string_view msg)
@@ -96,5 +116,6 @@ void    User::incrementChannelCount()
 
 void    User::decrementChannelCount()
 {
-    --m_channelCount;
+    if (m_channelCount > 0)
+        --m_channelCount;
 }
