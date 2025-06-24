@@ -249,7 +249,6 @@ Server::iter	Server::receivingData(iter it) {
 			runError("close in receivingData", it->fd);
 		buffer.clear();
 		it = polling.erase(it);
-		it = polling.begin();
 		return (it);
 	}
 	else if (check_receive == 0) {
@@ -259,14 +258,12 @@ Server::iter	Server::receivingData(iter it) {
 			runError("close in receivingData", it->fd);
 		buffer.clear();
 		it = polling.erase(it);
-		it = polling.begin();
 		return (it);
 	}
 	std::cout << it->fd << " has sent: " << std::flush;
 	for (auto print = buffer.begin(); print != buffer.end(); ++print)
 		std::cout << *print << std::flush;
 	buffer.clear();
-	it = std::next(it, 1);
 	return (it);
 }
 
@@ -283,15 +280,11 @@ void	Server::runServer() {
 		else if (check_poll == -1 && g_shutdown == 0)
 			runError("poll returned error, rtfm", 0);
 		else {
-			for (iter it = polling.begin(); it != polling.end();) {
-				if (it->fd == server_fd && (it->revents & POLLIN) && g_shutdown == 0) {
+			for (iter it = polling.begin(); it != polling.end(); ++it) {
+				if (it->fd == server_fd && (it->revents & POLLIN) && g_shutdown == 0)
 					acceptingClient();
-					it = std::next(it, 1);
-				}
-				else if (it->fd != server_fd && (it->revents & POLLIN) && g_shutdown == 0)
+				else if (it->fd != server_fd && it->fd > 1 && (it->revents & POLLIN) && g_shutdown == 0)
 					it = receivingData(it);
-				else
-					it = std::next(it, 1);
 			}
 		}
 	}
