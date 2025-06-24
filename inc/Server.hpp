@@ -8,6 +8,7 @@
 #include <cerrno>
 #include <cstring>
 #include <csignal>
+#include <iterator>
 /*
 	above C++ libraries
 	below C style libraries

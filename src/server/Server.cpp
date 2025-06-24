@@ -188,34 +188,32 @@ void	Server::sendMsg(std::string msg, int fd) {
 }
 
 void	Server::acceptingClient() {
-	while (true) {
-		struct	sockaddr_in client_info;
-		memset(&client_info, 0, sizeof(client_info));
-		socklen_t	info_size = sizeof(client_info);
-		int client_fd = accept(server_fd, reinterpret_cast<struct sockaddr*>(&client_info), &info_size);
-		if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-			runError("accept failed, rtfm", 0);
-			break ;
+	struct	sockaddr_in client_info;
+	memset(&client_info, 0, sizeof(client_info));
+	socklen_t	info_size = sizeof(client_info);
+	int client_fd = accept(server_fd, reinterpret_cast<struct sockaddr*>(&client_info), &info_size);
+	if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+		runError("accept failed, rtfm", 0);
+		return ;
+	}
+	else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		return ;
+	else {
+		int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
+		if (flag == -1) {
+			runError("fcntl call for new client failed", client_fd);
+			if (close(client_fd) != 0)
+				runError("close in acceptingClient", client_fd);
+			return ;
 		}
-		else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
-			break ;
 		else {
-			int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			if (flag == -1) {
-				runError("fcntl call for new client failed", client_fd);
-				if (close(client_fd) != 0)
-					runError("close in acceptingClient", client_fd);
-				continue;
-			}
-			else {
-				// sendMsg("Welcome to our IRC server", client_fd);
-				struct pollfd new_client;
-				new_client.fd = client_fd;
-				new_client.events = POLLIN;
-				std::string address = inet_ntoa(client_info.sin_addr);
-				std::cout << "new client at: '" << address << "' got accepted" << std::endl;
-				polling.push_back(new_client);
-			}
+			// sendMsg("Welcome to our IRC server", client_fd);
+			struct pollfd new_client;
+			new_client.fd = client_fd;
+			new_client.events = POLLIN;
+			std::string address = inet_ntoa(client_info.sin_addr);
+			std::cout << "new client at: '" << address << "' got accepted" << std::endl;
+			polling.push_back(new_client);
 		}
 	}
 }
@@ -243,7 +241,8 @@ Server::iter	Server::receivingData(iter it) {
 	std::vector<char>	buffer;
 	buffer.resize(512);
 	int check_receive = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
-	if (check_receive == -1) {
+	if (check_receive == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+		std::cout << "double check it was: " << it->fd << std::endl;
 		runError("recv didn't proccess the message", it->fd);
 		recvErrno();
 		if (close(it->fd) != 0)
@@ -263,9 +262,11 @@ Server::iter	Server::receivingData(iter it) {
 		it = polling.begin();
 		return (it);
 	}
+	std::cout << it->fd << " has sent: " << std::flush;
 	for (auto print = buffer.begin(); print != buffer.end(); ++print)
 		std::cout << *print << std::flush;
 	buffer.clear();
+	it = std::next(it, 1);
 	return (it);
 }
 
@@ -282,11 +283,15 @@ void	Server::runServer() {
 		else if (check_poll == -1 && g_shutdown == 0)
 			runError("poll returned error, rtfm", 0);
 		else {
-			for (iter it = polling.begin(); it != polling.end(); ++it) {
-				if (it->fd == server_fd && (it->revents & POLLIN))
+			for (iter it = polling.begin(); it != polling.end();) {
+				if (it->fd == server_fd && (it->revents & POLLIN) && g_shutdown == 0) {
 					acceptingClient();
-				else if (it->fd != server_fd && (it->revents & POLLIN))
+					it = std::next(it, 1);
+				}
+				else if (it->fd != server_fd && (it->revents & POLLIN) && g_shutdown == 0)
 					it = receivingData(it);
+				else
+					it = std::next(it, 1);
 			}
 		}
 	}
