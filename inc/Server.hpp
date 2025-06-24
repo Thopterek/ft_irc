@@ -53,9 +53,11 @@ class	Server {
 		/*
 			containers for different functionality
 			- keeping track of the poll file descriptors
+			- vector to add the new ones in the polling
 			- processing all the clients data
 		*/
 		std::vector<struct pollfd> polling;
+		std::vector<struct pollfd> fresh;
 		Client	clients;
 		// Channel	channels;
 	public:

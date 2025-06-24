@@ -8,7 +8,7 @@ void	handler(int signum) {
 }
 
 Server::Server(int ac, char **av)
-: server_fd(-1), polling(), clients() {
+: server_fd(-1), polling(), fresh(), clients() {
 	try {
 		ac_check(ac);
 		port_check(av);
@@ -32,6 +32,11 @@ Server::~Server() {
 				runError("close failed for polling at destructor", it->fd);
 		}
 	}
+	for (auto it = fresh.begin(); it != fresh.end(); ++it) {
+		if (close(it->fd) != 0)
+				runError("close failed for polling at destructor", it->fd);	
+	}
+	fresh.clear();
 	if (server_fd >= 0) {
 		if (close(server_fd) != 0)
 			runError("close failed for server_fd at destructor", server_fd);
@@ -212,8 +217,8 @@ void	Server::acceptingClient() {
 			new_client.fd = client_fd;
 			new_client.events = POLLIN;
 			std::string address = inet_ntoa(client_info.sin_addr);
-			std::cout << "new client at: '" << address << "' got accepted" << std::endl;
-			polling.push_back(new_client);
+			std::cout << "new client at: '" << address << "' and with '" << client_fd << "' got accepted" << std::endl;
+			fresh.push_back(new_client);
 		}
 	}
 }
@@ -264,7 +269,7 @@ Server::iter	Server::receivingData(iter it) {
 	for (auto print = buffer.begin(); print != buffer.end(); ++print)
 		std::cout << *print << std::flush;
 	buffer.clear();
-	return (it);
+	return (++it);
 }
 
 void	Server::runServer() {
@@ -280,12 +285,19 @@ void	Server::runServer() {
 		else if (check_poll == -1 && g_shutdown == 0)
 			runError("poll returned error, rtfm", 0);
 		else {
-			for (iter it = polling.begin(); it != polling.end(); ++it) {
-				if (it->fd == server_fd && (it->revents & POLLIN) && g_shutdown == 0)
+			for (iter it = polling.begin(); it != polling.end();) {
+				if (it->fd == server_fd && (it->revents & POLLIN) && g_shutdown == 0) {
 					acceptingClient();
-				else if (it->fd != server_fd && it->fd > 1 && (it->revents & POLLIN) && g_shutdown == 0)
+					++it;
+				}
+				else if (it->fd != server_fd && it->fd > 2 && (it->revents & POLLIN) && g_shutdown == 0)
 					it = receivingData(it);
+				else
+					++it;
 			}
+			for (const struct pollfd &saved : fresh)
+				polling.push_back(saved);
+			fresh.clear();
 		}
 	}
 }
