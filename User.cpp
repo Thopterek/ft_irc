@@ -12,6 +12,8 @@
 
 #include "User.hpp"
 
+const std::string        m_serverName = "ncs-irc.local";
+
 User::User(int fd, std::string_view ip, std::string_view hostName)
     :   m_socketFd{fd}, m_userIp{ip},
         m_hostName{hostName}, m_status{RegStatus::CONNECTED}
@@ -32,14 +34,14 @@ void    User::setRealName(std::string_view realName)
     m_realName = realName;
 }
 
-void    User::setBuffer(std::string_view buffer)
-{
-    m_buffer = buffer;
-}
-
 void    User::setStatus(RegStatus status)
 {
     m_status = status;
+}
+
+const std::string  User::getServerName()
+{
+    return (std::string(m_serverName));
 }
 
 std::string User::getNickName() const
@@ -93,7 +95,17 @@ void    User::buffer(std::string_view input)
     m_buffer += input;
 }
 
-void    User::sendMsg(std::string_view msg)
+std::string    
+User::buildMsg(int errCode, const std::string& cmd, const std::string& errMsg)
+{
+    std::string serverPrefix { ":" + getServerName()};
+    std::string errorCode {std::to_string(errCode)};
+    
+    serverPrefix += (" " + errorCode + " " + getNickName());
+    return (serverPrefix + " " + cmd + " " + errMsg);
+}
+
+void    User::respond(std::string_view msg)
 {
     if (send(m_socketFd, msg.data(), msg.length(), 0) == -1)
         throw   std::runtime_error("Unable to send message");

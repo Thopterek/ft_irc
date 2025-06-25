@@ -22,11 +22,6 @@ User&   Client::operator[](int socketFd)
     return (*(m_users.at(socketFd)));
 }
 
-std::string_view  Client::getServerName()
-{
-    return m_serverName;
-}
-
 void    
     Client::connect(int fd, std::string_view ip, std::string_view hostName)
 {

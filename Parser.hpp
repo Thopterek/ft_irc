@@ -13,7 +13,9 @@
 #ifndef PARSER_HPP
 #define PARSER_HPP
 
+#include <sstream>
 #include <vector>
+#include <cctype>
 #include "User.hpp"
 
 
@@ -28,7 +30,7 @@ public:
     static void parseAndDispatch(User&);
 private:
     static std::unordered_map<std::string, Cmdhandler> m_handler;
-    static std::vector<std::string>   buildCmdParams(std::string_view);
+    static std::vector<std::string> tokenize(std::string_view);
     static  void    dispatchCommand(User&, const std::vector<std::string>&);
 };
 

@@ -34,7 +34,8 @@ class   User
     int                 m_channelCount {0};
     RegStatus           m_status;
     const std::string   m_userIp, m_hostName;
-    std::string         m_nickName, m_userName, m_realName, m_buffer;
+    std::string         m_nickName, m_userName, m_realName, m_buffer; 
+    static const std::string        m_serverName;
   public:
     User() = delete;
     explicit User(int, std::string_view, std::string_view);
@@ -46,22 +47,23 @@ class   User
     void        setUserName(std::string_view);
     void        setRealName(std::string_view);
     void        setStatus(RegStatus);
-    void        setBuffer(std::string_view);
-    std::string getNickName() const;
-    std::string getUserName() const;
-    std::string getRealName() const;
-    std::string getUserIp() const;
-    std::string getHostName() const;
-    std::string getBuffer() const;
-    int         getSocketFd() const;
-    RegStatus   getStatus() const;
-    int         getChannelCount() const;
+    static  const std::string getServerName();
+    std::string         getNickName() const;
+    std::string         getUserName() const;
+    std::string         getRealName() const;
+    std::string         getUserIp() const;
+    std::string         getHostName() const;
+    std::string         getBuffer() const;
+    int                 getSocketFd() const;
+    RegStatus           getStatus() const;
+    int                 getChannelCount() const;
 
     std::string getPrefix() const;
     void        buffer(std::string_view);
     void        incrementChannelCount();
     void        decrementChannelCount();
-    void        sendMsg(std::string_view);
+    std::string buildMsg(int, const std::string&, const std::string&);
+    void                respond(std::string_view);
    };
 
 #endif

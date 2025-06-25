@@ -30,3 +30,59 @@ Parser::Parser()
     m_handler.emplace("PING", handlePing);
     m_handler.emplace("PONG", handlePong);
 }
+
+std::vector<std::string>    Parser::tokenize(std::string_view msg)
+{
+    std::string                 input(msg);
+    std::istringstream          iss(input);
+    std::string                 params;
+    std::vector<std::string>    tokens;
+
+    //discard leading prefix if sent
+    if (!input.empty() && input.front() == ':')
+        iss >> params;
+    while (iss >> params)
+    {
+        //check for trailing prefix
+        if (params.front() == ':')
+        {
+            std::string trailingPrefix = params.substr(1);
+            std::string rest;
+            std::getline(iss, rest);
+            tokens.push_back(trailingPrefix + rest);
+            break ;
+        }
+        tokens.push_back(params);
+    }
+    return (tokens);
+}
+
+void    
+Parser::dispatchCommand(User& user, const std::vector<std::string>& argVec)
+{
+    if (argVec.empty())
+        return ;
+
+    std::string                 cmd{argVec.front()};
+    std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
+    std::vector<std::string>    params{argVec.begin() + 1, argVec.end()};
+
+    try
+    {
+        m_handler.at(cmd)(user, params);
+    }
+    catch (const std::out_of_range&)
+    {
+        std::string msg;
+        msg = user.buildMsg(ERR_UNKNOWNCOMMAND, cmd, ": Unknown Command");
+        user.respond(msg);
+    }
+}
+
+void    Parser::parseAndDispatch(User& user)
+{
+    std::vector<std::string>    tokens{tokenize(user.getBuffer())};
+    if (!tokens.empty())
+        dispatchCommand(user, tokens);
+    user.getBuffer().clear();
+}

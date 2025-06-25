@@ -29,7 +29,6 @@ class   Client
 {
     int m_userCount {0};
     std::unordered_map<int, User*>              m_users;
-    static inline constexpr std::string_view    m_serverName = "ncs-irc.local";
   public:
     Client() = delete;
     explicit Client(int, std::string_view, std::string_view);
@@ -38,7 +37,6 @@ class   Client
     ~Client() = default;
     User&   operator[](int);
 
-    static  std::string_view  getServerName();
     void    connect(int, std::string_view, std::string_view);
     void    disconnect(int);
 };
