@@ -1,6 +1,6 @@
 EXEC = ircserv
 COMP = c++
-CXXFLAGS = -Wall -Werror -Wextra -Wshadow -std=c++17
+CXXFLAGS = -Wall -Werror -Wextra -Wshadow -std=c++17 -g
 SRCS =	src/main.cpp src/channel/Channel.cpp src/server/Server.cpp \
 		src/client/Client.cpp src/client/User.cpp src/util/Util.cpp
 OBJS = $(SRCS:.cpp=.o)

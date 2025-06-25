@@ -212,13 +212,17 @@ void	Server::acceptingClient() {
 			return ;
 		}
 		else {
-			// sendMsg("Welcome to our IRC server", client_fd);
 			struct pollfd new_client;
 			new_client.fd = client_fd;
 			new_client.events = POLLIN;
 			std::string address = inet_ntoa(client_info.sin_addr);
-			std::cout << "new client at: '" << address << "' and with '" << client_fd << "' got accepted" << std::endl;
+			struct hostent *client_host = gethostbyname(address.c_str());
+			std::string hostname = client_host->h_name;
+			std::cout << "new client at: '" << address << "'" << std::endl;
+			std::cout << "and with fd: '" << client_fd << "' got accepted" << std::endl;
+			std::cout << "his hostname is '" << hostname << "'" << std::endl;
 			fresh.push_back(new_client);
+			sendMsg("Welcome to our IRC server", client_fd);
 		}
 	}
 }
