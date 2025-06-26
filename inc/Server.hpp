@@ -143,11 +143,15 @@ class	Server {
 			running the actual server
 			taking the clients conenctions
 			- main caller and the infinite loop
-			- accepting the conneciton
-			- receving the data from members
+			- accepting the conneciton que to add later
+			- removing from the poll invalid closed fds
+			- cleaning the open fds that had errors
+			- receving the data from current members
 		*/
 		void	runServer();
 		void	acceptingClient();
+		iter	removeInvalid(iter it);
+		iter	removeError(iter it);
 		iter	receivingData(iter it);
 		/*
 			helper function for output

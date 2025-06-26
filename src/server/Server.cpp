@@ -213,6 +213,7 @@ void	Server::acceptingClient() {
 		}
 		else {
 			struct pollfd new_client;
+			memset(&new_client, 0, sizeof(new_client));
 			new_client.fd = client_fd;
 			new_client.events = POLLIN;
 			std::string address = inet_ntoa(client_info.sin_addr);
@@ -269,11 +270,32 @@ Server::iter	Server::receivingData(iter it) {
 		it = polling.erase(it);
 		return (it);
 	}
+	buffer.resize(check_receive);
 	std::cout << it->fd << " has sent: " << std::flush;
 	for (auto print = buffer.begin(); print != buffer.end(); ++print)
 		std::cout << *print << std::flush;
+	if (buffer.size() >= 2) {
+		auto slash_n = std::prev(buffer.end(), 1);
+		auto carnage = std::prev(buffer.end(), 2);
+		if (*slash_n == '\n' && *carnage == '\r')
+			std::cout << "message ended with carnage and newline" << std::endl;
+		else 
+			std::cout << "message is going to be buffered" << std::endl;
+	}
 	buffer.clear();
 	return (++it);
+}
+
+Server::iter	Server::removeError(iter it) {
+	std::cout << "Client with fd: '" << it->fd << "' had an error" << std::endl;
+	if (close(it->fd) != 0)
+		runError("Close on disconnection failed", it->fd);
+	return (polling.erase(it));
+}
+
+Server::iter	Server::removeInvalid(iter it) {
+	std::cout << "File descriptor was never opened or already closed: " << it->fd << std::endl;
+	return (polling.erase(it));
 }
 
 void	Server::runServer() {
@@ -294,6 +316,10 @@ void	Server::runServer() {
 					acceptingClient();
 					++it;
 				}
+				else if (it->fd != server_fd && it->fd > 2 && (it->revents & POLLNVAL) && g_shutdown == 0)
+					it = removeInvalid(it);
+				else if (it->fd != server_fd && it->fd > 2 && (it->revents & POLLERR) && g_shutdown == 0)
+					it = removeError(it);
 				else if (it->fd != server_fd && it->fd > 2 && (it->revents & POLLIN) && g_shutdown == 0)
 					it = receivingData(it);
 				else
