@@ -8,6 +8,7 @@
 #include <cerrno>
 #include <cstring>
 #include <csignal>
+#include <iterator>
 /*
 	above C++ libraries
 	below C style libraries
@@ -15,9 +16,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+/*
+	includes of our headers
+	for different functionality
+*/
+#include "Client.hpp"
+#include "Channel.hpp"
 
 /*
 	handler and actual signal flag
@@ -44,8 +53,13 @@ class	Server {
 		/*
 			containers for different functionality
 			- keeping track of the poll file descriptors
+			- vector to add the new ones in the polling
+			- processing all the clients data
 		*/
 		std::vector<struct pollfd> polling;
+		std::vector<struct pollfd> fresh;
+		Client	clients;
+		// Channel	channels;
 	public:
 		Server() = delete;
 		Server(const Server &other) = delete;
@@ -121,17 +135,35 @@ class	Server {
 		void	assign_address();
 		void	use_to_connect();
 		/*
+			typedef to check for proper polling
+			without the problem of iterators
+		*/
+		typedef	std::vector<struct pollfd>::iterator iter;
+		/*
 			running the actual server
 			taking the clients conenctions
 			- main caller and the infinite loop
-			- accepting the conneciton
-			- receving the data from members
-			- printing the debug for run
-			*/
+			- accepting the conneciton que to add later
+			- removing from the poll invalid fds
+			- close socket for already disconnected
+			- cleaning the open fds that had errors
+			- receving the data from current members
+		*/
 		void	runServer();
 		void	acceptingClient();
-		int	receivingData(const int &sockfd);
-		void	runError(const std::string &msg) const;
+		iter	removeInvalid(iter it);
+		iter	removeDisconnected(iter it);
+		iter	removeError(iter it);
+		iter	receivingData(iter it);
+		/*
+			helper function for output
+			- debbuging the runServer / cleaning stage
+			- wrapper for sending the msg
+			- checking which errno is it
+		*/
+		void	runError(const std::string &msg, const int &fd) const;
+		void	sendMsg(std::string msg, int fd);
+		void	recvErrno();
 };
 
 

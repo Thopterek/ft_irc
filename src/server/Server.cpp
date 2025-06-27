@@ -8,7 +8,7 @@ void	handler(int signum) {
 }
 
 Server::Server(int ac, char **av)
-: server_fd(-1), polling() {
+: server_fd(-1), polling(), fresh(), clients() {
 	try {
 		ac_check(ac);
 		port_check(av);
@@ -25,12 +25,23 @@ Server::Server(int ac, char **av)
 }
 
 Server::~Server() {
+	for (auto it = polling.begin(); it != polling.end(); ++it) {
+		if (it->fd != server_fd) {
+			sendMsg("Server is closing, see you later", it->fd);
+			if (close(it->fd) != 0)
+				runError("close failed for polling at destructor", it->fd);
+		}
+	}
+	for (auto it = fresh.begin(); it != fresh.end(); ++it) {
+		if (close(it->fd) != 0)
+				runError("close failed for polling at destructor", it->fd);	
+	}
+	fresh.clear();
 	if (server_fd >= 0) {
-		close(server_fd);
+		if (close(server_fd) != 0)
+			runError("close failed for server_fd at destructor", server_fd);
 		server_fd = -1;
 	}
-	for (auto it = polling.begin(); it != polling.end(); ++it)
-		close(it->fd);
 	polling.clear();
 }
 
@@ -94,12 +105,18 @@ void	Server::setupServer() {
 }
 
 void	Server::cleanExit() {
-	if (server_fd >= 0) {
-		close(server_fd);
-		server_fd = -1;
+	for (auto it = polling.begin(); it != polling.end(); ++it) {
+		if (it->fd != server_fd) {
+			if (close(it->fd) != 0)
+				runError("close in cleanExit for polling", it->fd);
+		}
 	}
-	for (auto it = polling.begin(); it != polling.end(); ++it)
-		close(it->fd);
+	if (server_fd >= 0) {
+		if (close(server_fd) != 0)
+			runError("close in cleanExit for server_fd", server_fd);
+		else
+			server_fd = -1;
+	}
 	polling.clear();
 	exit(EXIT_FAILURE);
 }
@@ -153,73 +170,173 @@ void	Server::use_to_connect() {
 		throw errorListen();
 }
 
-void	Server::runError(const std::string &msg) const {
-	std::cerr << "Error: 'runServer' " << msg << std::endl;
+/*
+	now we are getting to part with running the server
+	everything here is contained in the runServer ft
+*/
+void	Server::runError(const std::string &msg, const int &fd) const {
+	if (fd == 0)
+		std::cerr << "Error: 'runServer' " << msg << std::endl;
+	else
+		std::cerr << "Error: 'runServer' " << msg << " for '" << fd << "'" << std::endl;
+}
+
+void	Server::sendMsg(std::string msg, int fd) {
+	if (fd < 0)
+		return;
+	std::string full = msg + "\r\n";
+	ssize_t	check = send(fd, full.c_str(), full.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		recvErrno();
+		runError("MSG failed to be send", fd);
+	}
 }
 
 void	Server::acceptingClient() {
-	while (true) {
-		int client_fd = accept(server_fd, NULL, NULL);
-		if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-			runError("accept failed, rtfm");
-			break ;
-		}
-		else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+	struct	sockaddr_in client_info;
+	memset(&client_info, 0, sizeof(client_info));
+	socklen_t	info_size = sizeof(client_info);
+	int client_fd = accept(server_fd, reinterpret_cast<struct sockaddr*>(&client_info), &info_size);
+	if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+		runError("accept failed, rtfm", 0);
+		return ;
+	}
+	else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+		return ;
+	else {
+		int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
+		if (flag == -1) {
+			runError("fcntl call for new client failed", client_fd);
+			if (close(client_fd) != 0)
+				runError("close in acceptingClient", client_fd);
 			return ;
+		}
 		else {
-			int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
-			if (flag == -1)
-				runError("fcntl call for new client failed");
-			else {
-				struct pollfd new_client;
-				new_client.fd = client_fd;
-				new_client.events = POLLIN;
-				polling.push_back(new_client);
-			}
+			struct pollfd new_client;
+			memset(&new_client, 0, sizeof(new_client));
+			new_client.fd = client_fd;
+			new_client.events = POLLIN;
+			std::string address = inet_ntoa(client_info.sin_addr);
+			struct hostent *client_host = gethostbyname(address.c_str());
+			std::string hostname = client_host->h_name;
+			std::cout << "new client at: '" << address << "'" << std::endl;
+			std::cout << "and with fd: '" << client_fd << "' got accepted" << std::endl;
+			std::cout << "his hostname is '" << hostname << "'" << std::endl;
+			fresh.push_back(new_client);
+			sendMsg("Welcome to our IRC server", client_fd);
 		}
 	}
 }
 
-int	Server::receivingData(const int &sockfd) {
+void	Server::recvErrno() {
+	if (errno == EAGAIN || errno == EWOULDBLOCK)
+		std::cerr << "it was EAGAIN" << std::endl;
+	else if (errno == EBADF)
+		std::cerr << "it was EBADF: sockfd is an invalid fd" << std::endl;
+	else if (errno == ECONNREFUSED)
+		std::cerr << "it was ECONNREFUSED" << std::endl;
+	else if (errno == EFAULT)
+		std::cerr << "it was EFAULT" << std::endl;
+	else if (errno == EINTR)
+		std::cerr << "it was EINTR" << std::endl;
+	else if (errno == EINVAL)
+		std::cerr << "it was EINVAL" << std::endl;
+	else if (errno == ENOTCONN)
+		std::cerr << "it was ENOTCONN: The socket is not connected" << std::endl;
+	else if (errno == ENOTSOCK)
+		std::cerr << "it was ENOTSOCK" << std::endl;
+} 
+
+Server::iter	Server::receivingData(iter it) {
 	std::vector<char>	buffer;
-	buffer.resize(1024);
-	int check_receive = recv(sockfd, buffer.data(), buffer.size(), 0);
-	if (check_receive == -1) {
-		runError("recv didn't proccess the message");
-		close(sockfd);
-		return (EXIT_FAILURE);
+	buffer.resize(512);
+	int check_receive = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
+	if (check_receive == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+		std::cout << "double check it was: " << it->fd << std::endl;
+		runError("recv didn't proccess the message", it->fd);
+		recvErrno();
+		if (close(it->fd) != 0)
+			runError("close in receivingData", it->fd);
+		buffer.clear();
+		it = polling.erase(it);
+		return (it);
 	}
 	else if (check_receive == 0) {
-		close(sockfd);
-		return (EXIT_FAILURE);
+		std::cout << "Client with fd: '" << it->fd << "' disconnected" << std::endl;
+		sendMsg("Goodbye and comeback soon", it->fd);
+		if (close(it->fd) != 0)
+			runError("close in receivingData", it->fd);
+		buffer.clear();
+		it = polling.erase(it);
+		return (it);
 	}
-	for (auto it = buffer.begin(); it != buffer.end(); ++it)
-		std::cout << *it << std::flush;
-	return (EXIT_SUCCESS);
+	buffer.resize(check_receive);
+	std::cout << it->fd << " has sent: " << std::flush;
+	for (auto print = buffer.begin(); print != buffer.end(); ++print)
+		std::cout << *print << std::flush;
+	if (buffer.size() > 2) {
+		auto slash_n = std::prev(buffer.end(), 1);
+		auto carnage = std::prev(buffer.end(), 2);
+		if (*slash_n == '\n' && *carnage == '\r')
+			std::cout << "message ended with carnage and newline" << std::endl;
+		else 
+			std::cout << "message is going to be buffered" << std::endl;
+	}
+	buffer.clear();
+	return (++it);
+}
+
+Server::iter	Server::removeError(iter it) {
+	std::cout << "Client with fd: '" << it->fd << "' had an error" << std::endl;
+	if (close(it->fd) != 0)
+		runError("Close on removeError failed", it->fd);
+	return (polling.erase(it));
+}
+
+Server::iter	Server::removeInvalid(iter it) {
+	std::cout << "File descriptor was never opened or already closed: " << it->fd << std::endl;
+	return (polling.erase(it));
+}
+
+Server::iter	Server::removeDisconnected(iter it) {
+	std::cout << "Client with: " << it->fd << " has disconnected" << std::endl;
+	if (close(it->fd) != 0)
+		runError("Close on disconnection failed", it->fd);
+	return (polling.erase(it));
 }
 
 void	Server::runServer() {
 	struct pollfd polling_pool;
+	memset(&polling_pool, 0, sizeof(polling_pool));
 	polling_pool.fd = server_fd;
 	polling_pool.events = POLLIN;
 	polling.push_back(polling_pool);
 	while (g_shutdown == 0) {
 		int check_poll = poll(polling.data(), polling.size(), -1);
 		if (check_poll == 0)
-			runError("poll timed out before fd was ready");
+			runError("poll timed out before fd was ready", 0);
 		else if (check_poll == -1 && g_shutdown == 0)
-			runError("poll returned error, rtfm");
+			runError("poll returned error, rtfm", 0);
 		else {
-			for (auto it = polling.begin(); it != polling.end(); ++it) {
-				if (it->fd == server_fd && it->events == POLLIN && it->revents == POLLIN)
+			for (iter it = polling.begin(); it != polling.end();) {
+				if (it->fd == server_fd && (it->revents & POLLIN) && g_shutdown == 0) {
 					acceptingClient();
-				else if (it->fd != server_fd && it->events == POLLIN && it->revents == POLLIN) {
-					if (receivingData(it->fd) == EXIT_FAILURE) {
-						polling.erase(it);
-						break;
-					}
+					++it;
 				}
+				else if (it->fd != server_fd && it->fd > 2 && (it->revents & POLLNVAL) && g_shutdown == 0)
+					it = removeInvalid(it);
+				else if (it->fd != server_fd && it->fd > 2 && (it->revents & POLLHUP) && g_shutdown == 0)
+					it = removeDisconnected(it);
+				else if (it->fd != server_fd && it->fd > 2 && (it->revents & POLLERR) && g_shutdown == 0)
+					it = removeError(it);
+				else if (it->fd != server_fd && it->fd > 2 && (it->revents & POLLIN) && g_shutdown == 0)
+					it = receivingData(it);
+				else
+					++it;
 			}
+			for (const struct pollfd &saved : fresh)
+				polling.push_back(saved);
+			fresh.clear();
 		}
 	}
 }
