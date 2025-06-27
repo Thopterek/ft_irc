@@ -3,8 +3,8 @@
 const std::string        m_serverName = "ncs-irc.local";
 
 User::User(int fd, std::string_view ip, std::string_view hostName)
-    :   m_socketFd{fd}, m_userIp{ip},
-        m_hostName{hostName}, m_status{RegStatus::CONNECTED}
+    :   m_socketFd{fd}, m_status{RegStatus::CONNECTED}, m_userIp{ip},
+        m_hostName{hostName} 
 {}
 
 void    User::setNickName(std::string_view nickName)
@@ -27,9 +27,9 @@ void    User::setStatus(RegStatus status)
     m_status = status;
 }
 
-const std::string  User::getServerName()
+const std::string  &User::getServerName() const
 {
-    return (std::string(m_serverName));
+    return (m_serverName);
 }
 
 std::string User::getNickName() const
@@ -80,6 +80,7 @@ std::string User::getSource() const
 
 void    User::buffer(std::string_view input)
 {
+    std::cout << input << ": got added to the buffer" << std::endl;
     m_buffer += input;
 }
 

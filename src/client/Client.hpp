@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.hpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: sudaniel <sudaniel@student.42heilbronn.de  +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/20 13:18:57 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/06/20 17:56:59 by sudaniel         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
@@ -30,7 +18,7 @@ class   Client
     int m_userCount {0};
     std::unordered_map<int, User*>              m_users;
   public:
-    Client() = delete;
+    Client();
     explicit Client(int, std::string_view, std::string_view);
     Client(const Client&) = delete;
     Client& operator=(const Client&) = delete;

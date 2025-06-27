@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   User.hpp                                           :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: sudaniel <sudaniel@student.42heilbronn.de  +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/20 14:36:45 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/06/20 17:08:27 by sudaniel         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #ifndef USER_HPP
 #define USER_HPP
 
@@ -19,7 +7,7 @@
 #include <string_view>
 #include "Client.hpp"
 
-    
+
 enum class RegStatus 
 { 
     CONNECTED,
@@ -35,7 +23,7 @@ class   User
     RegStatus           m_status;
     const std::string   m_userIp, m_hostName;
     std::string         m_nickName, m_userName, m_realName, m_buffer; 
-    static const std::string        m_serverName;
+    const std::string        m_serverName;
   public:
     User() = delete;
     explicit User(int, std::string_view, std::string_view);
@@ -47,7 +35,7 @@ class   User
     void        setUserName(std::string_view);
     void        setRealName(std::string_view);
     void        setStatus(RegStatus);
-    static  const std::string getServerName();
+    const std::string &getServerName() const;
     std::string         getNickName() const;
     std::string         getUserName() const;
     std::string         getRealName() const;

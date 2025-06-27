@@ -25,7 +25,8 @@
 	includes of our headers
 	for different functionality
 */
-#include "Client.hpp"
+#include "../src/client/Client.hpp"
+#include "../src/client/Parser.hpp"
 #include "Channel.hpp"
 
 /*
@@ -59,6 +60,7 @@ class	Server {
 		std::vector<struct pollfd> polling;
 		std::vector<struct pollfd> fresh;
 		Client	clients;
+		Parser	pars;
 		// Channel	channels;
 	public:
 		Server() = delete;

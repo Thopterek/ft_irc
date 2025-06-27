@@ -8,7 +8,7 @@ void	handler(int signum) {
 }
 
 Server::Server(int ac, char **av)
-: server_fd(-1), polling(), fresh(), clients() {
+: server_fd(-1), polling(), fresh(), clients(), pars() {
 	try {
 		ac_check(ac);
 		port_check(av);
@@ -223,6 +223,7 @@ void	Server::acceptingClient() {
 			std::cout << "and with fd: '" << client_fd << "' got accepted" << std::endl;
 			std::cout << "his hostname is '" << hostname << "'" << std::endl;
 			fresh.push_back(new_client);
+			clients.connect(client_fd, address, hostname);
 			sendMsg("Welcome to our IRC server", client_fd);
 		}
 	}
@@ -248,7 +249,8 @@ void	Server::recvErrno() {
 } 
 
 Server::iter	Server::receivingData(iter it) {
-	std::vector<char>	buffer;
+	// std::vector<char>	buffer;
+	std::string	buffer;
 	buffer.resize(512);
 	int check_receive = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
 	if (check_receive == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
@@ -277,10 +279,15 @@ Server::iter	Server::receivingData(iter it) {
 	if (buffer.size() > 2) {
 		auto slash_n = std::prev(buffer.end(), 1);
 		auto carnage = std::prev(buffer.end(), 2);
-		if (*slash_n == '\n' && *carnage == '\r')
+		if (*slash_n == '\n' && *carnage == '\r') {
 			std::cout << "message ended with carnage and newline" << std::endl;
-		else 
+			clients[it->fd].buffer(buffer.data());
+			pars.parseAndDispatch(clients[it->fd]);
+		}
+		else {
 			std::cout << "message is going to be buffered" << std::endl;
+			clients[it->fd].buffer(buffer.data());	
+		}
 	}
 	buffer.clear();
 	return (++it);
@@ -300,6 +307,7 @@ Server::iter	Server::removeInvalid(iter it) {
 
 Server::iter	Server::removeDisconnected(iter it) {
 	std::cout << "Client with: " << it->fd << " has disconnected" << std::endl;
+	clients.disconnect(it->fd);
 	if (close(it->fd) != 0)
 		runError("Close on disconnection failed", it->fd);
 	return (polling.erase(it));
