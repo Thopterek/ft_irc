@@ -2,11 +2,6 @@
 
 Client::Client() : m_users() {}
 
-Client::Client(int fd, std::string_view ip, std::string_view hostName)
-{
-    connect(fd, ip, hostName);
-}
-
 User&   Client::operator[](int socketFd)
 {
     return (*(m_users.at(socketFd)));

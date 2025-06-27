@@ -3,13 +3,24 @@
 const std::string        m_serverName = "ncs-irc.local";
 
 User::User(int fd, std::string_view ip, std::string_view hostName)
-    :   m_socketFd{fd}, m_status{RegStatus::CONNECTED}, m_userIp{ip},
+    :   m_fd{fd}, m_status{RegStatus::CONNECTED}, m_userIp{ip},
         m_hostName{hostName} 
-{}
+{
+    m_errors.emplace(Errors::ERR_NONE, "");
+    m_errors.emplace(Errors::ERR_NICKMORETHAN9CHARS, ": Toomuch letters");
+    m_errors.emplace(Errors::ERR_NONICKNAMEGIVEN,  ": No Nick given");
+    m_errors.emplace(Errors::ERR_NICKNAMEINUSE, ": Nick in use");
+    m_errors.emplace(Errors::ERR_ERRONEUSNICKNAME, ": Erroneous nickname");
+}
 
 void    User::setNickName(std::string_view nickName)
 {
     m_nickName = nickName;
+}
+
+void    User::setNickName(std::string_view oldNick)
+{
+    m_oldNick = oldNick;
 }
 
 void    User::setUserName(std::string_view userName)
@@ -27,7 +38,7 @@ void    User::setStatus(RegStatus status)
     m_status = status;
 }
 
-const std::string  &User::getServerName() const
+const std::string&  User::getServerName()
 {
     return (m_serverName);
 }
@@ -35,6 +46,11 @@ const std::string  &User::getServerName() const
 std::string User::getNickName() const
 {
     return (m_nickName);
+}
+
+std::string User::getOldNick() const
+{
+    return (m_oldNick);
 }
 
 std::string User::getUserName() const
@@ -62,9 +78,9 @@ std::string User::getBuffer() const
     return (m_buffer);
 }
 
-int User::getSocketFd() const
+int User::getFd() const
 {
-    return (m_socketFd);
+    return (m_fd);
 }
 
 std::string User::getSource() const
@@ -96,7 +112,7 @@ User::buildMsg(int errCode, const std::string& cmd, const std::string& errMsg)
 
 void    User::respond(std::string_view msg)
 {
-    if (send(m_socketFd, msg.data(), msg.length(), 0) == -1)
+    if (send(m_fd, msg.data(), msg.length(), 0) == -1)
         throw   std::runtime_error("Unable to send message");
 }
 
