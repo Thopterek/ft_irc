@@ -63,7 +63,7 @@ class   User
     void        incrementChannelCount();
     void        decrementChannelCount();
     std::string buildMsg(int, const std::string&, const std::string&);
-    void                respond(std::string_view);
+    void        respond(std::string_view);
    };
 
 #endif
