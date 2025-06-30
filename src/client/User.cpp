@@ -11,6 +11,8 @@ User::User(int fd, std::string_view ip, std::string_view hostName)
     m_errors.emplace(Errors::ERR_NONICKNAMEGIVEN,  ": No Nick given");
     m_errors.emplace(Errors::ERR_NICKNAMEINUSE, ": Nick in use");
     m_errors.emplace(Errors::ERR_ERRONEUSNICKNAME, ": Erroneous nickname");
+    m_errors.emplace(Errors::ERR_NEEDMOREPARAMS, ": More parameters needed");
+    m_errors.emplace(Errors::ERR_ALREADYREGISTERED, ": Already registered");
 }
 
 void    User::setNickName(std::string_view nickName)
@@ -138,10 +140,7 @@ void    User::addToChannel(Channel* channel)
 
 void    User::removeFromChannels(Channel* channel)
 {
-    auto it { m_channels.find(channel) };
-
-    if (it != m_channels.end())
-        m_channels.erase(it);
+    m_channels.erase(channel);
 }
 
 void    User::incrementChannelCount()
