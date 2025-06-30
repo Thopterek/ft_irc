@@ -1,16 +1,15 @@
 #include "Client.hpp"
 
-ErrorValues validate(Client& client, int fd, std::string_view nick)
+static ErrorValues validate(Client& client, int fd, std::string_view nick)
 {
     if (nick.empty())
         return (Errors::ERR_NONICKNAMEGIVEN);
-    char first = nick.front();
-    if (!std::isalpha(first) || nick.size() > 9)
+    if (!std::isalpha(nick.front()) || nick.size() > 9)
         return (Errors::ERR_ERRONEUSNICKNAME);
     for (auto c : nick)
         if (c == ' ' || c == ',' || c == '*' || c == '?' || c == '!' || c == '@')
             return (Errors::ERR_ERRONEUSNICKNAME);
-    std::string capitalized { ircCapitalize(nick) };
+    const std::string capitalized { client.ircCapitalize(nick) };
     for (auto user : client.m_clients)
         if (user->m_fd != client[fd].m_fd)
             if (capitalized == ircCapitalize(user->getNickName()))
@@ -20,17 +19,17 @@ ErrorValues validate(Client& client, int fd, std::string_view nick)
 
 void    nick(Client& client, int fd, std::vector<std::string> param)
 {
-    User&       user = client[fd];
+    User&       user { client[fd] };
 
     if (param.empty())
     {
-        const std::string&  error = user.errors.at(Errors::ERR_NONICKNAMEGIVEN);
+        const std::string&  error { user.errors.at(Errors::ERR_NONICKNAMEGIVEN) };
         user.respond(user.buildMsg(Errors::ERR_NONICKNAMEGIVEN, "NICK", error));
         return ;
     }
 
-    const std::string&  newNick = param.front();
-    ErrorValues err = validate(client, fd, newNick);
+    const std::string&  newNick { param.front() };
+    ErrorValues err { validate(client, fd, newNick) };
 
     if (err != Errors::ERR_NONE)
     {

@@ -37,6 +37,8 @@ class   Client
 
     void    connect(int, std::string_view, std::string_view);
     void    disconnect(int);
+    static const std::string&   ircCapitalize(const std::string&);
+    static int     ircToupper(int c);
 };
 
 #endif

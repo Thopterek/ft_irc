@@ -49,9 +49,12 @@ class   User
     std::string         getBuffer() const;
     int                 getFd() const;
     RegStatus           getStatus() const;
+    const std::set<Channel*>&  getChannels() const;
     int                 getChannelCount() const;
+    std::string         getSource() const;
 
-    std::string getSource() const;
+    void        addToChannel(Channel*);
+    void        removeFromChannels(Channel*);
     void        buffer(std::string_view);
     void        incrementChannelCount();
     void        decrementChannelCount();

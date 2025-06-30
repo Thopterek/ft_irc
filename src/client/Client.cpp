@@ -26,3 +26,28 @@ void    Client::disconnect(int socketFd)
     --m_userCount;
     std::cout << "Client with fd: " << socketFd << " removed from the pool" << std::endl;
 }
+
+const std::string  Client::ircCapitalize(const std::string& str)
+{
+    std::string capitalize;
+    capitalize.reserve(str.size());
+
+    for (auto c : str)
+        capitalize += static_cast<char>(ircToupper(c));
+    return (capitalize);
+}
+
+// IRC case-insensitive mapping
+int Client::ircToupper(int c)
+{
+    if (c == '{')
+        return ('[');
+    else if (c == '}')
+        return (']');
+    else if (c == '|')
+        return ('\\');
+    else if (c == '^')
+        return ('~');
+    else
+        return (std::toupper(c));
+}
