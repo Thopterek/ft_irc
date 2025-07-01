@@ -1,4 +1,4 @@
-#include "Client.hpp"
+#include "../client/User.hpp"
 
 static ErrorValues validate(Client& client, int fd, std::string_view nick)
 {
