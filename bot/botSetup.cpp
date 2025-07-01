@@ -17,7 +17,9 @@ static void welcome() {
 }
 
 int	main(void) {
+	std::signal(SIGINT, handler);
 	welcome();
 	Bot	marvin;
+	marvin.connectBot();
 	return (0);
 }
