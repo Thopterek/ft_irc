@@ -16,8 +16,7 @@ Server::Server(int ac, char **av)
 		password = av[2];
 		server_fd = socket(PF_INET, SOCK_STREAM, 0);
 		socket_check(server_fd);
-		std::cout << "Server with port: " << port << std::endl;
-		std::cout << "and password: " << password << std::endl;
+		printDone();
 	} catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		exit(EXIT_FAILURE);
@@ -87,6 +86,34 @@ void	Server::socket_check(int fd) const {
 		throw errorSocket();
 }
 
+void	Server::printDone() const {
+	std::cout << "\033[1m";
+	std::cout << "       .d8888b. " << std::endl;
+	std::cout << "      d88P  Y88b " << std::endl;
+	std::cout << "      Y88b. " << std::endl;
+	std::cout << "       Y888b.    .d88b.  888d888 888  888  .d88b.  888d888 " << std::endl;
+	std::cout << "          Y88b. d8P  Y8b 888P   888  888 d8P  Y8b 888P " << std::endl;
+	std::cout << "            888 88888888 888     Y88  88P 88888888 888 " << std::endl;
+	std::cout << "     Y88b  d88P Y8b.     888      Y8bd8P  Y8b.     888 " << std::endl;
+	std::cout << "         Y8888P   Y8888  888       Y88P    Y8888  888 " << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+	std::cout << "d8b                                 888 " << std::endl;
+	std::cout << "Y8P                                 888 " << std::endl;
+	std::cout << "                                    888 " << std::endl;
+	std::cout << "888 .d8888b       .d8888b   .d88b.  888888 888  888 88888b. " << std::endl;
+	std::cout << "888 88K           88K      d8P  Y8b 888    888  888 888  88b " << std::endl;
+	std::cout << "888  Y8888b.       Y8888b. 88888888 888    888  888 888  888 " << std::endl;
+	std::cout << "888      X88           X88 Y8b.     Y88b.  Y88b 888 888 d88P " << std::endl;
+	std::cout << "888  88888P'       88888P'   Y8888    Y888   Y88888 88888P " << std::endl;
+	std::cout << "                                                    888 " << std::endl;
+	std::cout << "                                                    888 " << std::endl;    
+	std::cout << "                                                    888 " << "\033[0m" << std::endl;
+	std::cout << "Runs on the port: " << "\033[33m\033[1m" << port << "\033[0m" << std::flush;
+	std::cout << " and password: " << "\033[33m\033[1m" << password << "\033[0m" << std::endl;
+}
+
 /*
 	second part of getting through before running the server
 	setting up the non blocking and other basic functionality
@@ -97,7 +124,7 @@ void	Server::setupServer() {
 		non_blocking();
 		assign_address();
 		use_to_connect();
-		std::cout << "Server setup done" << std::endl;
+		std::cout << "all of the above checks went through correctly, try to connect" << std::endl;
 	} catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		cleanExit();
@@ -145,12 +172,15 @@ void	Server::socket_options() {
 	check = setsockopt(server_fd, IPPROTO_TCP, TCP_NODELAY, &tmp, sizeof(tmp));
 	if (check == -1)
 		throw errorOptions();
+	std::cout << "socket " << "\033[33m\033[1m" << "REUSE" << "\033[0m" <<  " and " << std::flush; 
+	std::cout << "\033[33m\033[1m" <<  "Nagle " << "\033[0m" << std::flush;
 }
 
 void	Server::non_blocking() {
 	int flag = fcntl(server_fd, F_SETFL, O_NONBLOCK);
 	if (flag == -1)
 		throw errorFcntl();
+	std::cout << "fcntl " << "\033[33m\033[1m" << "NONBLOCK " << "\033[0m" << std::flush;
 }
 
 void	Server::assign_address() {
@@ -162,12 +192,14 @@ void	Server::assign_address() {
 	int check = bind(server_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address));
 	if (check == -1)
 		throw errorBind();
+	std::cout << "bind " << "\033[33m\033[1m" << "IPV4 " << "\033[0m" << std::flush;
 }
 
 void	Server::use_to_connect() {
 	int check = listen(server_fd, SOMAXCONN);
 	if (check == -1)
 		throw errorListen();
+	std::cout << "listen "<< "\033[33m\033[1m" << "MAXCONN " << "\033[0m" << std::endl;
 }
 
 /*

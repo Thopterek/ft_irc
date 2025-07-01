@@ -101,6 +101,7 @@ class	Server {
 		void	ac_check(int ac) const;
 		void	port_check(char **av) const;
 		void	socket_check(int server_fd) const;
+		void	printDone() const;
 		/*
 			getting past all of the above points
 			setting up for upcomming connection
