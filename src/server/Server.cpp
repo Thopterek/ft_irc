@@ -165,8 +165,7 @@ const char *Server::errorListen::what() const throw() {
 }
 
 void	Server::socket_options() {
-	int tmp = 1;
-	int check = setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &tmp, sizeof(tmp));
+	int tmp = 1, check = setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &tmp, sizeof(tmp));
 	if (check == -1)
 		throw errorOptions();
 	check = setsockopt(server_fd, IPPROTO_TCP, TCP_NODELAY, &tmp, sizeof(tmp));
@@ -280,8 +279,11 @@ void	Server::recvErrno() {
 		std::cerr << "it was ENOTSOCK" << std::endl;
 } 
 
+/*
+	check if there is any other way than checking errno values
+	after getting the result from the recv and etc.
+*/
 Server::iter	Server::receivingData(iter it) {
-	// std::vector<char>	buffer;
 	std::string	buffer;
 	buffer.resize(512);
 	int check_receive = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);

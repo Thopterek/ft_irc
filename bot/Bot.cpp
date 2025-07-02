@@ -7,7 +7,12 @@ void	handler(int signum) {
 	g_shutdown = 1;
 }
 
-Bot::Bot() : bot_name(""), file("", ""), server_port(0), server_password(""), bot_fd(-1) {
+Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "simple text file"), file_type(FileType::TEXT), server_port(123), server_password("123") {
+	setupSocket();
+	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
+}
+
+Bot::Bot() : bot_name(""), file("", ""), file_type(FileType::UNSET), server_port(0), server_password(""), bot_fd(-1) {
 	setupName();
 	setupFile();
 	setupPort();
@@ -39,6 +44,11 @@ void	Bot::setupFile() {
 			file.first = "";
 		}
 	}
+	/*
+		needed logic to setup the types of file
+		as for now file_type wasn't great for it
+	*/
+	file_type = FileType::TEXT;
 	printRequest("write a description between 1 and 510 characters for it");
 	while (file.second == "" && g_shutdown == 0) {
 		checkEof();
@@ -84,29 +94,30 @@ void	Bot::setupSocket() {
 		std::cerr << "Failed to create a vaild socket" << std::endl;
 		exit(1);
 	}
-	// int flag = fcntl(bot_fd, F_SETFL, O_NONBLOCK);
-	// if (flag < 1) {
-	// 	std::cerr << "Failed to set non blocking socket" << std::endl;
-	// 	if (close(bot_fd) != 0)
-	// 		std::cerr << "Close in setupSocket failed" << std::endl;
-	// 	exit(1);
-	// }
+	int flag = fcntl(bot_fd, F_SETFL, O_NONBLOCK);
+	if (flag < 0) {
+		std::cerr << "Failed to set non blocking socket" << std::endl;
+		if (close(bot_fd) != 0)
+			std::cerr << "Close in setupSocket failed" << std::endl;
+		exit(1);
+	}
 }
 
+/*
+	anything will work
+*/
 void	Bot::connectBot() {
 	struct sockaddr_in server;
 	memset(&server, 0, sizeof(server));
-	server.sin_family = AF_INET;
-	server.sin_port = htons(static_cast<uint16_t>(server_port));
-	if (connect(bot_fd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server)) < 0)
-		std::cerr << "Connection failed" << std::endl;
-	else
-		runBot();
+	server.sin_family = AF_INET, server.sin_port = htons(static_cast<uint16_t>(server_port));
+	connect(bot_fd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server));
+	runBot();
 }
 
 void	Bot::runBot() {
-	while (g_shutdown == 0)
-	{}
+	std::cout << "bot should be running" << std::endl;
+	// while (g_shutdown == 0)
+	// {}
 }
 
 Bot::~Bot() {

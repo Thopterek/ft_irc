@@ -2,10 +2,12 @@
 #define	BOT_HPP
 
 #include <utility>
+#include <filesystem>
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <csignal>
+#include <cstring>
 /*
 	C++ style libraries above
 	and the C ones below
@@ -15,29 +17,40 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+/*
+	Type of a file
+	thats being sent
+*/
+enum class	FileType {
+	UNSET,
+	TEXT,
+	BINARY
+};
+
 extern volatile std::sig_atomic_t g_shutdown;
 void	handler(int signum);
-
 /*
 	handler and actual signal flag
 	to shutdown bot gracefully
 	below the implementation
 */
-
 class	Bot {
 	private:
 		std::string	bot_name;
 		std::pair<std::string, std::string> file;
+		FileType	file_type;
 		int	server_port;
 		std::string server_password;
 		int	bot_fd;
 	public:
 		Bot();
+		Bot(std::string name);
 		~Bot();
 		Bot(const Bot &other) = delete;
 		Bot	&operator=(const Bot &other) = delete;
 		/*
 			above the mandator OCF form per norm
+			and extra constructor for testing
 			below helper functions for bot setup
 		*/
 		void	checkEof();
@@ -58,7 +71,6 @@ class	Bot {
 		*/
 		void	connectBot();
 		void	runBot();
-
 };
 
 #endif
