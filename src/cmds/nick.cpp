@@ -21,10 +21,16 @@ void    nick(Client& client, int fd, std::vector<std::string> param)
 {
     User&       user { client[fd] };
 
+    if (user.getStatus == RegStatus::CONNECTED)
+    {
+        user.respond("ERROR :You must send PASS command before registering.");
+        return ;
+    }
     if (param.empty())
     {
-        const std::string&  error { user.errors.at(Errors::ERR_NONICKNAMEGIVEN) };
-        user.respond(user.buildMsg(Errors::ERR_NONICKNAMEGIVEN, "NICK", error));
+        user.handleErrors(Errors::ERR_NONICKNAMEGIVEN, "NICK");
+       // const std::string&  error { user.errors.at(Errors::ERR_NONICKNAMEGIVEN) };
+       // user.respond(user.buildMsg(Errors::ERR_NONICKNAMEGIVEN, "NICK", error));
         return ;
     }
 
@@ -39,7 +45,6 @@ void    nick(Client& client, int fd, std::vector<std::string> param)
     if (user.getNickName().empty())
     {
         user.setNickName(newNick);
-        user.setStatus(RegStatus::REGISTERING);
         return ;
     }
     if (ircCapitalize(user.getNickName()) == ircCapitalize(newNick))
