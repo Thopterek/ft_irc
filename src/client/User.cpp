@@ -2,9 +2,9 @@
 
 const std::string        m_serverName = "ncs-irc.local";
 
-User::User(int fd, std::string_view ip, std::string_view hostName)
+User::User(int fd, std::string_view ip, std::string_view hostName, std::string_view serverPwd)
     :   m_fd{fd}, m_status{RegStatus::CONNECTED}, m_userIp{ip},
-        m_hostName{hostName} 
+        m_hostName{hostName}, m_serverPwd{ serverPwd } 
 {
     m_errors.emplace(Errors::ERR_NONE, "");
     m_errors.emplace(Errors::ERR_NICKMORETHAN9CHARS, ": Toomuch letters");
@@ -13,6 +13,8 @@ User::User(int fd, std::string_view ip, std::string_view hostName)
     m_errors.emplace(Errors::ERR_ERRONEUSNICKNAME, ": Erroneous nickname");
     m_errors.emplace(Errors::ERR_NEEDMOREPARAMS, ": More parameters needed");
     m_errors.emplace(Errors::ERR_ALREADYREGISTERED, ": Already registered");
+    m_errors.emplace(Errors::ERR_REGISTERING, ": Pass set, continue registration");
+    m_errors.emplace(Errors::ERR_PASSWDMISMATCH, ": Wrong password entered");
 }
 
 void    User::setNickName(std::string_view nickName)
@@ -53,6 +55,11 @@ std::string User::getNickName() const
 std::string User::getOldNick() const
 {
     return (m_oldNick);
+}
+
+const std::string&  User::getServerPwd() const
+{
+    return (m_serverPwd);
 }
 
 std::string User::getUserName() const
@@ -100,6 +107,12 @@ void    User::buffer(std::string_view input)
 {
     std::cout << input << ": got added to the buffer" << std::endl;
     m_buffer += input;
+}
+
+void    User::handleErrors(Errors errorCode, const std::string& cmd)
+{
+    const std::string&  error { m_errors.at(errorCode) };
+    respond(buildMsg(errorCode, cmd, error));
 }
 
 std::string    

@@ -22,14 +22,15 @@ class   User
     const int           m_fd;
     int                 m_channelCount {0};
     RegStatus           m_status;
-    const std::string   m_userIp, m_hostName;
+    const std::string   m_userIp, m_hostName, m_serverPwd;
     std::string         m_nickName, m_oldNick, m_userName, m_realName, m_buffer; 
     static const std::string            m_serverName;
     std::set<Channel*>                  m_channels;
     std::map<ErrorValues, std::string>  m_errors;
+    std::string buildMsg(int, const std::string&, const std::string&);
   public:
     User() = delete;
-    explicit User(int, std::string_view, std::string_view);
+    explicit User(int, std::string_view, std::string_view, std::string_view);
     User(const User&) = delete;
     User&   operator=(const User&) = delete;
     ~User() = default;
@@ -46,6 +47,7 @@ class   User
     std::string         getRealName() const;
     std::string         getUserIp() const;
     std::string         getHostName() const;
+    const std::string&  getServerPwd() const;
     std::string         getBuffer() const;
     int                 getFd() const;
     RegStatus           getStatus() const;
@@ -58,7 +60,7 @@ class   User
     void        buffer(std::string_view);
     void        incrementChannelCount();
     void        decrementChannelCount();
-    std::string buildMsg(int, const std::string&, const std::string&);
+    void        handleErrors(Errors, const std::string&);
     void        respond(std::string_view);
    };
 
