@@ -4,10 +4,12 @@
 #include <utility>
 #include <filesystem>
 #include <iostream>
+#include <vector>
 #include <fstream>
 #include <string>
 #include <csignal>
 #include <cstring>
+#include <cerrno>
 /*
 	C++ style libraries above
 	and the C ones below
@@ -44,8 +46,10 @@ class	Bot {
 		std::pair<std::string, std::string> file;
 		FileType	file_type;
 		int	server_port;
-		std::string server_password;
-		int	bot_fd, file_fd;
+		std::string server_password, server_ip;
+		int	bot_fd, connect_to_bot_fd;
+		std::vector<struct pollfd> polling;
+		std::vector<struct pollfd> fresh;
 	public:
 		Bot();
 		Bot(std::string name);
@@ -74,8 +78,13 @@ class	Bot {
 			acutally connecting to the server
 			and sending all requried messages
 		*/
-		void	connectBot();
+		typedef	std::vector<struct pollfd>::iterator iter;
+		void	initialPolling();
+		int	tryConnect();
 		void	runBot();
+		void	acceptUser();
+		iter	recvUser(iter it);
+		void	recvServer();
 };
 
 #endif

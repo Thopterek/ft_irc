@@ -7,14 +7,14 @@ void	handler(int signum) {
 	g_shutdown = 1;
 }
 
-Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "simple text file"),
-file_type(FileType::TEXT), server_port(123), server_password("123"), bot_fd(-1), file_fd(-1) {
+Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "simple text file"), file_type(FileType::TEXT),
+server_port(123), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
 }
 
 Bot::Bot() : bot_name(""), file("", ""), file_type(FileType::UNSET), server_port(0),
-server_password(""), bot_fd(-1), file_fd(-1) {
+server_password(""), server_ip(""), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupName();
 	setupFile();
 	setupPort();
@@ -88,38 +88,45 @@ void	Bot::setupPass() {
 		if (server_password == "" && g_shutdown == 0)
 			printMistake("Password can't be empty");
 	}
+	printRequest("copy the ip address of machine that server runs on");
+	while (server_password == "" && g_shutdown == 0) {
+		checkEof();
+		std::getline(std::cin, server_password);
+		if (server_password == "" && g_shutdown == 0)
+			printMistake("IP address can't be empty");
+	}
 }
 
 void	Bot::setupSockets() {
 	bot_fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (bot_fd < 0)
 		cleanExit("socket on bot_fd returned error");
-	int flag = fcntl(bot_fd, F_SETFL, O_NONBLOCK);
-	if (flag < 0)
-		cleanExit("fcntl failed to set non blocking for bot_fd");
-	file_fd = socket(PF_INET, SOCK_STREAM, 0);
-	if (file_fd < 0)
-		cleanExit("socket on file_fd returned error");
-	int yes = 1, check = setsockopt(file_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+	// int flag = fcntl(bot_fd, F_SETFL, O_NONBLOCK);
+	// if (flag < 0)
+	// 	cleanExit("fcntl failed to set non blocking for bot_fd");
+	connect_to_bot_fd = socket(PF_INET, SOCK_STREAM, 0);
+	if (connect_to_bot_fd < 0)
+		cleanExit("socket on connect_to_bot_fd returned error");
+	int yes = 1, check = setsockopt(connect_to_bot_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
 	if (check == -1)
 		cleanExit("setting socket option with REUSE address failed");
-	check = setsockopt(file_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
+	check = setsockopt(connect_to_bot_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
 	if (check == -1)
 		cleanExit("setting socket option to disable Nagle algo failed");
-	flag = fcntl(file_fd, F_SETFL, O_NONBLOCK);
+	int flag = fcntl(connect_to_bot_fd, F_SETFL, O_NONBLOCK);
 	if (flag < 0)
-		cleanExit("fcntl failed to set non blocking for file_fd");
+		cleanExit("fcntl failed to set non blocking for connect_to_bot_fd");
 	struct sockaddr_in address;
 	memset(&address, 0, sizeof(address));
 	address.sin_family = AF_INET, address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(static_cast<uint16_t>(file_fd));
-	check = bind(file_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address));
+	address.sin_port = htons(static_cast<uint16_t>(connect_to_bot_fd));
+	check = bind(connect_to_bot_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address));
 	if (check == -1)
-		cleanExit("bind for the file_fd failed in setupSockets");
-	check = listen(file_fd, SOMAXCONN);
+		cleanExit("bind for the connect_to_bot_fd failed in setupSockets");
+	check = listen(connect_to_bot_fd, SOMAXCONN);
 	if (check == -1)
-		cleanExit("listen for file_fd failed in setupSockets");
-	std::cout << "\033[33m\033[1m" << "Bot waits for connection at port: " << "\033[0m" << file_fd << std::endl;
+		cleanExit("listen for connect_to_bot_fd failed in setupSockets");
+	std::cout << "\033[33m\033[1m" << "Bot waits for connection at port: " << "\033[0m" << connect_to_bot_fd << std::endl;
 }
 
 void	Bot::cleanExit(const std::string &msg) {
@@ -128,27 +135,128 @@ void	Bot::cleanExit(const std::string &msg) {
 		if (close(bot_fd) != 0)
 			std::cerr << "Close for bot_fd in cleanExit failed" << std::endl;
 	}
-	if (file_fd > 0) {
-		if (close(file_fd) != 0)
-			std::cerr << "Close for file_fd in cleanExit failed" << std::endl;
+	if (connect_to_bot_fd > 0) {
+		if (close(connect_to_bot_fd) != 0)
+			std::cerr << "Close for connect_to_bot_fd in cleanExit failed" << std::endl;
 	}
 	exit(1);	
 }
 
-/*
-	anything will work
-*/
-void	Bot::connectBot() {
+void	Bot::initialPolling() {
+	struct pollfd connect_bot;
+	memset(&connect_bot, 0, sizeof(connect_bot));
+	connect_bot.fd = bot_fd, connect_bot.events = POLLIN;
+	polling.push_back(connect_bot);
+	struct pollfd file_transfer;
+	memset(&file_transfer, 0, sizeof(file_transfer));
+	file_transfer.fd = connect_to_bot_fd, file_transfer.events = POLLIN;
+	polling.push_back(file_transfer);
+}
+
+int	Bot::tryConnect() {
 	struct sockaddr_in server;
 	memset(&server, 0, sizeof(server));
 	server.sin_family = AF_INET, server.sin_port = htons(static_cast<uint16_t>(server_port));
-	connect(bot_fd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server));
+	server.sin_addr.s_addr = inet_addr(server_ip.c_str());
+	int check = connect(bot_fd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server));
+	if (check != 0) {
+		std::cerr << "Connect failed" << std::endl;
+		return (1);
+	}
+	return (0);
+}
+
+void	Bot::acceptUser() {
+	struct	sockaddr_in client_info;
+	memset(&client_info, 0, sizeof(client_info));
+	socklen_t	info_size = sizeof(client_info);
+	int client_fd = accept(connect_to_bot_fd, reinterpret_cast<struct sockaddr*>(&client_info), &info_size);
+	if (client_fd == -1)
+		return ;
+	else {
+		int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
+		if (flag == -1) {
+			close(client_fd);
+			return ;
+		}
+		else {
+			struct pollfd new_client;
+			memset(&new_client, 0, sizeof(new_client));
+			new_client.fd = client_fd;
+			new_client.events = POLLIN;
+			fresh.push_back(new_client);
+			std::cout << "USER CONNECTED TO THE BOT" << std::endl;
+		}
+	}
+}
+
+Bot::iter	Bot::recvUser(iter it) {
+	std::string	buffer;
+	buffer.resize(512);
+	int check_receive = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
+	if (check_receive == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+		std::cerr << "Client with fd: " << it->fd << " had some error" << std::endl;
+		close(it->fd);
+		buffer.clear();
+		it = polling.erase(it);
+		return (it);
+	}
+	else if (check_receive == 0) {
+		std::cout << "Client with fd: '" << it->fd << "' disconnected" << std::endl;
+		close(it->fd);
+		buffer.clear();
+		it = polling.erase(it);
+		return (it);
+	}
+	buffer.resize(check_receive);
+	for (auto print = buffer.begin(); print != buffer.end(); ++print)
+		std::cout << *print << std::flush;
+	std::cout << " <- from client: " << it->fd << std::endl;
+	buffer.clear();
+	return (++it);
+}
+
+void	Bot::recvServer() {
+	std::string	buffer;
+	buffer.resize(512);
+	int check = recv(bot_fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
+	if (check < 1)
+		std::cerr << "WE GOT AN ERROR" << std::endl;
+	else {
+		buffer.resize(check);
+		for (auto print = buffer.begin(); print != buffer.end(); ++print)
+			std::cout << *print << std::flush;
+	}
+	buffer.clear();
 }
 
 void	Bot::runBot() {
-	std::cout << "bot should be running" << std::endl;
-	// while (g_shutdown == 0)
-	// {}
+	initialPolling();
+	int connected = tryConnect();
+	while (g_shutdown == 0 && connected == 0) {
+		int	check = poll(polling.data(), polling.size(), -1);
+		if (check == -1 && g_shutdown == 0)
+			std::cerr << "Poll returned error" << std::endl;
+		else {
+			for (iter it = polling.begin(); it != polling.end();) {
+				if (it->fd == connect_to_bot_fd && (it->revents & POLLIN) && g_shutdown == 0) {
+					acceptUser();
+					++it;
+				}
+				else if (it->fd != connect_to_bot_fd && it->fd != bot_fd && (it->revents & POLLIN) && g_shutdown == 0)
+					it = recvUser(it);
+				else if (it->fd == bot_fd && (it->revents & POLLIN) && g_shutdown == 0) {
+					recvServer();
+					++it;
+				}
+				else
+					++it;
+			}
+			for (const struct pollfd &saved : fresh)
+				polling.push_back(saved);
+			fresh.clear();
+		}
+	}
 }
 
 Bot::~Bot() {
@@ -156,9 +264,13 @@ Bot::~Bot() {
 		if (close(bot_fd) != 0)
 			std::cerr << "Close for bot_fd in destructor failed" << std::endl;
 	}
-	if (file_fd > 0) {
-		if (close(file_fd) != 0)
-			std::cerr << "Close for file_fd in destructor failed" << std::endl;
+	if (connect_to_bot_fd > 0) {
+		if (close(connect_to_bot_fd) != 0)
+			std::cerr << "Close for connect_to_bot_fd in destructor failed" << std::endl;
+	}
+	for (iter it = polling.begin(); it != polling.end(); ++it) {
+		if (it->fd != bot_fd && it->fd != connect_to_bot_fd)
+			close(it->fd);
 	}
 }
 
