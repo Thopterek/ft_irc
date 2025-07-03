@@ -15,6 +15,11 @@ User::User(int fd, std::string_view ip, std::string_view hostName, std::string_v
     m_errors.emplace(Errors::ERR_ALREADYREGISTERED, ": Already registered");
     m_errors.emplace(Errors::ERR_REGISTERING, ": Pass set, continue registration");
     m_errors.emplace(Errors::ERR_PASSWDMISMATCH, ": Wrong password entered");
+    m_errors.emplace(Errors::ERR_NOSUCHNICK, ": No such nick");
+    m_errors.emplace(Errors::ERR_CANNOTSENDTOCHAN, ": You cannot send message to channel");
+    m_errors.emplace(Errors::ERR_TOOMANYTARGETS, ": Too many targets");
+    m_errors.emplace(Errors::ERR_NORECIPIENT, ": You must provide a target for your message");
+    m_errors.emplace(Errors::ERR_NOTEXTTOSEND, ": Message must not be empty");
 }
 
 void    User::setNickName(std::string_view nickName)

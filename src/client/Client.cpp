@@ -7,6 +7,11 @@ User&   Client::operator[](int socketFd)
     return (*(m_users.at(socketFd)));
 }
 
+const std::unordered_map<int, User*>&   Client::getUsers() const
+{
+    return (m_users);
+}
+
 void    
     Client::connect(int fd, std::string_view ip, std::string_view hostName)
 {

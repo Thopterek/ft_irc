@@ -26,6 +26,12 @@ enum class Errors
     ERR_NEEDMOREPARAMS = 461,
     ERR_ALREADYREGISTERED = 462,
     ERR_PASSWDMISMATCH = 464,
+    ERR_NOSUCHNICK = 401,
+    ERR_CANNOTSENDTOCHAN = 404,
+    ERR_TOOMANYTARGETS = 407,
+    ERR_NORECIPIENT = 411,
+    ERR_NOTEXTTOSEND = 412,
+    //RPL_AWAY = 301
 };
 
 class   Client
@@ -39,6 +45,7 @@ class   Client
     ~Client() = default;
     User&   operator[](int);
 
+    const std::unordered_map<int, User*>&   getUsers() const;
     void    connect(int, std::string_view, std::string_view);
     void    disconnect(int);
     static const std::string&   ircCapitalize(const std::string&);
