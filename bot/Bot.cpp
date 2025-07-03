@@ -7,17 +7,19 @@ void	handler(int signum) {
 	g_shutdown = 1;
 }
 
-Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "simple text file"), file_type(FileType::TEXT), server_port(123), server_password("123") {
-	setupSocket();
+Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "simple text file"),
+file_type(FileType::TEXT), server_port(123), server_password("123"), bot_fd(-1), file_fd(-1) {
+	setupSockets();
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
 }
 
-Bot::Bot() : bot_name(""), file("", ""), file_type(FileType::UNSET), server_port(0), server_password(""), bot_fd(-1) {
+Bot::Bot() : bot_name(""), file("", ""), file_type(FileType::UNSET), server_port(0),
+server_password(""), bot_fd(-1), file_fd(-1) {
 	setupName();
 	setupFile();
 	setupPort();
 	setupPass();
-	setupSocket();
+	setupSockets();
 }
 
 void	Bot::setupName() {
@@ -88,19 +90,49 @@ void	Bot::setupPass() {
 	}
 }
 
-void	Bot::setupSocket() {
+void	Bot::setupSockets() {
 	bot_fd = socket(PF_INET, SOCK_STREAM, 0);
-	if (bot_fd < 0) {
-		std::cerr << "Failed to create a vaild socket" << std::endl;
-		exit(1);
-	}
+	if (bot_fd < 0)
+		cleanExit("socket on bot_fd returned error");
 	int flag = fcntl(bot_fd, F_SETFL, O_NONBLOCK);
-	if (flag < 0) {
-		std::cerr << "Failed to set non blocking socket" << std::endl;
+	if (flag < 0)
+		cleanExit("fcntl failed to set non blocking for bot_fd");
+	file_fd = socket(PF_INET, SOCK_STREAM, 0);
+	if (file_fd < 0)
+		cleanExit("socket on file_fd returned error");
+	int yes = 1, check = setsockopt(file_fd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
+	if (check == -1)
+		cleanExit("setting socket option with REUSE address failed");
+	check = setsockopt(file_fd, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
+	if (check == -1)
+		cleanExit("setting socket option to disable Nagle algo failed");
+	flag = fcntl(file_fd, F_SETFL, O_NONBLOCK);
+	if (flag < 0)
+		cleanExit("fcntl failed to set non blocking for file_fd");
+	struct sockaddr_in address;
+	memset(&address, 0, sizeof(address));
+	address.sin_family = AF_INET, address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons(static_cast<uint16_t>(file_fd));
+	check = bind(file_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address));
+	if (check == -1)
+		cleanExit("bind for the file_fd failed in setupSockets");
+	check = listen(file_fd, SOMAXCONN);
+	if (check == -1)
+		cleanExit("listen for file_fd failed in setupSockets");
+	std::cout << "\033[33m\033[1m" << "Bot waits for connection at port: " << "\033[0m" << file_fd << std::endl;
+}
+
+void	Bot::cleanExit(const std::string &msg) {
+	std::cerr << "Error: part of the setup failed, " << msg << std::endl;
+	if (bot_fd > 0) {
 		if (close(bot_fd) != 0)
-			std::cerr << "Close in setupSocket failed" << std::endl;
-		exit(1);
+			std::cerr << "Close for bot_fd in cleanExit failed" << std::endl;
 	}
+	if (file_fd > 0) {
+		if (close(file_fd) != 0)
+			std::cerr << "Close for file_fd in cleanExit failed" << std::endl;
+	}
+	exit(1);	
 }
 
 /*
@@ -111,7 +143,6 @@ void	Bot::connectBot() {
 	memset(&server, 0, sizeof(server));
 	server.sin_family = AF_INET, server.sin_port = htons(static_cast<uint16_t>(server_port));
 	connect(bot_fd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server));
-	runBot();
 }
 
 void	Bot::runBot() {
@@ -123,7 +154,11 @@ void	Bot::runBot() {
 Bot::~Bot() {
 	if (bot_fd > 0) {
 		if (close(bot_fd) != 0)
-			std::cerr << "Close in destructor failed" << std::endl;
+			std::cerr << "Close for bot_fd in destructor failed" << std::endl;
+	}
+	if (file_fd > 0) {
+		if (close(file_fd) != 0)
+			std::cerr << "Close for file_fd in destructor failed" << std::endl;
 	}
 }
 

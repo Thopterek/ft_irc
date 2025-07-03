@@ -14,12 +14,16 @@
 */
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <poll.h>
 
 /*
-	Type of a file
-	thats being sent
+	Type of a file thats can be sent
+	unset is the base before checkings
 */
 enum class	FileType {
 	UNSET,
@@ -41,7 +45,7 @@ class	Bot {
 		FileType	file_type;
 		int	server_port;
 		std::string server_password;
-		int	bot_fd;
+		int	bot_fd, file_fd;
 	public:
 		Bot();
 		Bot(std::string name);
@@ -64,7 +68,8 @@ class	Bot {
 		void	setupFile();
 		void	setupPort();
 		void	setupPass();
-		void	setupSocket();
+		void	setupSockets();
+		void	cleanExit(const std::string &msg);
 		/*
 			acutally connecting to the server
 			and sending all requried messages

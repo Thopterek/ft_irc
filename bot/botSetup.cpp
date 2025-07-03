@@ -21,6 +21,6 @@ int	main(void) {
 	welcome();
 	// Bot	marvin;
 	Bot	marvin("Marvin");
-	marvin.connectBot();
+	marvin.runBot();
 	return (0);
 }

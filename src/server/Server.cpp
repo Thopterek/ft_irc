@@ -228,11 +228,7 @@ void	Server::acceptingClient() {
 	memset(&client_info, 0, sizeof(client_info));
 	socklen_t	info_size = sizeof(client_info);
 	int client_fd = accept(server_fd, reinterpret_cast<struct sockaddr*>(&client_info), &info_size);
-	if (client_fd == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-		runError("accept failed, rtfm", 0);
-		return ;
-	}
-	else if (client_fd == -1 && (errno == EAGAIN || errno == EWOULDBLOCK))
+	if (client_fd == -1)
 		return ;
 	else {
 		int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
