@@ -7,12 +7,20 @@ void	handler(int signum) {
 	g_shutdown = 1;
 }
 
+/*
+	Constructor made just for testing
+	prefilled information without checks
+*/
 Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "simple text file"), file_type(FileType::TEXT),
 server_port(123), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
 }
 
+/*
+	Default constructor asking for all of the informations
+	has checks to be intact with all of the IRC requirments
+*/
 Bot::Bot() : bot_name(""), file("", ""), file_type(FileType::UNSET), server_port(0),
 server_password(""), server_ip(""), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupName();
@@ -22,18 +30,26 @@ server_password(""), server_ip(""), bot_fd(-1), connect_to_bot_fd(-1), polling()
 	setupSockets();
 }
 
+/*
+	name is gonna be used as the:
+	real name, nick, username
+*/
 void	Bot::setupName() {
-	printRequest("bot name has to be max 9 characters");
+	printRequest("bot name has to follow IRC rules (RFC 2812)");
 	while (bot_name == "" && g_shutdown == 0) {
 		checkEof();
 		std::getline(std::cin, bot_name);
-		if (bot_name.size() > 9 && g_shutdown == 0) {
+		if ((bot_name.size() > 9 || bot_name.empty() == true) && g_shutdown == 0) {
 			printMistake("Name doesn't follow the rule");
 			bot_name = "";
 		}
 	}
 }
 
+/*
+	information about file to transfer
+	to be used in XDCC type connection
+*/
 void	Bot::setupFile() {
 	printRequest("pick a file in the 'bot/files_to_transfer'");
 	while (file.first == "" && g_shutdown == 0) {
@@ -62,6 +78,10 @@ void	Bot::setupFile() {
 	}
 }
 
+/*
+	server of the port to be connected to
+	the bot port is being setup on its own
+*/
 void	Bot::setupPort() {
 	printRequest("choose the same port as the one that server is running on");
 	std::string	input;
@@ -80,6 +100,10 @@ void	Bot::setupPort() {
 	}
 }
 
+/*
+	password used by the server
+	and its IPV4 address
+*/
 void	Bot::setupPass() {
 	printRequest("copy the password used to connect to the server");
 	while (server_password == "" && g_shutdown == 0) {
@@ -89,21 +113,22 @@ void	Bot::setupPass() {
 			printMistake("Password can't be empty");
 	}
 	printRequest("copy the ip address of machine that server runs on");
-	while (server_password == "" && g_shutdown == 0) {
+	while (server_ip == "" && g_shutdown == 0) {
 		checkEof();
-		std::getline(std::cin, server_password);
-		if (server_password == "" && g_shutdown == 0)
-			printMistake("IP address can't be empty");
+		std::getline(std::cin, server_ip);
+		if (server_ip.empty() == true && g_shutdown == 0)
+			printMistake("IP address for sure can't be empty");
 	}
 }
 
+/*
+	part of the setup that happens on its own
+	sockets made on the free ones for machine
+*/
 void	Bot::setupSockets() {
 	bot_fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (bot_fd < 0)
 		cleanExit("socket on bot_fd returned error");
-	// int flag = fcntl(bot_fd, F_SETFL, O_NONBLOCK);
-	// if (flag < 0)
-	// 	cleanExit("fcntl failed to set non blocking for bot_fd");
 	connect_to_bot_fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (connect_to_bot_fd < 0)
 		cleanExit("socket on connect_to_bot_fd returned error");
@@ -129,6 +154,10 @@ void	Bot::setupSockets() {
 	std::cout << "\033[33m\033[1m" << "Bot waits for connection at port: " << "\033[0m" << connect_to_bot_fd << std::endl;
 }
 
+/*
+	used before the polling loop
+	cleaning up all the information
+*/
 void	Bot::cleanExit(const std::string &msg) {
 	std::cerr << "Error: part of the setup failed, " << msg << std::endl;
 	if (bot_fd > 0) {
@@ -139,20 +168,36 @@ void	Bot::cleanExit(const std::string &msg) {
 		if (close(connect_to_bot_fd) != 0)
 			std::cerr << "Close for connect_to_bot_fd in cleanExit failed" << std::endl;
 	}
+	for (iter it = polling.begin(); it != polling.end(); ++it) {
+		if (it->fd != bot_fd && it->fd != connect_to_bot_fd)
+			close(it->fd);
+	}
+	polling.clear();
 	exit(1);	
 }
 
+/*
+	getting the messages from the server on the bot_fd
+	keeping track of incoming connections on connect_to_bot_fd
+*/
 void	Bot::initialPolling() {
-	struct pollfd connect_bot;
-	memset(&connect_bot, 0, sizeof(connect_bot));
-	connect_bot.fd = bot_fd, connect_bot.events = POLLIN;
-	polling.push_back(connect_bot);
-	struct pollfd file_transfer;
-	memset(&file_transfer, 0, sizeof(file_transfer));
-	file_transfer.fd = connect_to_bot_fd, file_transfer.events = POLLIN;
-	polling.push_back(file_transfer);
+	if (g_shutdown == 0) {
+		struct pollfd connect_bot;
+		memset(&connect_bot, 0, sizeof(connect_bot));
+		connect_bot.fd = bot_fd, connect_bot.events = POLLIN;
+		polling.push_back(connect_bot);
+		struct pollfd file_transfer;
+		memset(&file_transfer, 0, sizeof(file_transfer));
+		file_transfer.fd = connect_to_bot_fd, file_transfer.events = POLLIN;
+		polling.push_back(file_transfer);
+	}
 }
 
+/*
+	try to connect to the server, if works correctly send:
+	1:PASS, 2:USER, 3:NICK just like any user would do
+	then joining the particular channel to check messages
+*/
 int	Bot::tryConnect() {
 	struct sockaddr_in server;
 	memset(&server, 0, sizeof(server));
@@ -166,6 +211,10 @@ int	Bot::tryConnect() {
 	return (0);
 }
 
+/*
+	accepting connection for file transfer
+	keeping the track of the clients
+*/
 void	Bot::acceptUser() {
 	struct	sockaddr_in client_info;
 	memset(&client_info, 0, sizeof(client_info));
@@ -190,6 +239,10 @@ void	Bot::acceptUser() {
 	}
 }
 
+/*
+	receving information from ones who connected above
+	closing the connection if the client would be killed/closed
+*/
 Bot::iter	Bot::recvUser(iter it) {
 	std::string	buffer;
 	buffer.resize(512);
@@ -216,6 +269,10 @@ Bot::iter	Bot::recvUser(iter it) {
 	return (++it);
 }
 
+/*
+	getting the messages that were sent from the server
+	checking for the particular types to send the response
+*/
 void	Bot::recvServer() {
 	std::string	buffer;
 	buffer.resize(512);
@@ -224,16 +281,22 @@ void	Bot::recvServer() {
 		std::cerr << "WE GOT AN ERROR" << std::endl;
 	else {
 		buffer.resize(check);
+		// if (buffer == "info\n\r")
 		for (auto print = buffer.begin(); print != buffer.end(); ++print)
 			std::cout << *print << std::flush;
 	}
 	buffer.clear();
 }
 
+/*
+	main loop of the bot to handle all connections
+	and main caller depending on the poll data
+*/
 void	Bot::runBot() {
 	initialPolling();
-	int connected = tryConnect();
-	while (g_shutdown == 0 && connected == 0) {
+	if (tryConnect() != 0 && g_shutdown == 0)
+		return;
+	while (g_shutdown == 0) {
 		int	check = poll(polling.data(), polling.size(), -1);
 		if (check == -1 && g_shutdown == 0)
 			std::cerr << "Poll returned error" << std::endl;
@@ -259,6 +322,10 @@ void	Bot::runBot() {
 	}
 }
 
+/*
+	Destructor with some safety checks
+	handling everything after going to runBot
+*/
 Bot::~Bot() {
 	if (bot_fd > 0) {
 		if (close(bot_fd) != 0)
@@ -272,8 +339,13 @@ Bot::~Bot() {
 		if (it->fd != bot_fd && it->fd != connect_to_bot_fd)
 			close(it->fd);
 	}
+	polling.clear();
 }
 
+/*
+	Helps with handling signal as to not break program
+	when user is inputing the bot information
+*/
 void	Bot::checkEof() {
 	if (g_shutdown == 0) {
 		if (std::cin.eof()) {
@@ -283,6 +355,9 @@ void	Bot::checkEof() {
 	}
 }
 
+/*
+	wrappers for repeated questions for user
+*/
 void	Bot::printRequest(const std::string &rules) const {
 	std::cout << "\033[33m\033[1m" << "Rules: "  << "\033[0m" << rules << std::endl;
 	std::cout << "\033[33m\033[1m" << "Please fill out: " << "\033[0m" << std::flush;

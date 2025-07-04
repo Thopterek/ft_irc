@@ -7,6 +7,10 @@ void	handler(int signum) {
 	g_shutdown = 1;
 }
 
+/*
+	constructor and parser for arguments from main
+	initializing the base structure to be used later
+*/
 Server::Server(int ac, char **av)
 : server_fd(-1), polling(), fresh(), clients(), pars() {
 	try {
@@ -23,6 +27,10 @@ Server::Server(int ac, char **av)
 	}
 }
 
+/*
+	Base constructor with some safety checks
+	as for the order of closing the connections
+*/
 Server::~Server() {
 	for (auto it = polling.begin(); it != polling.end(); ++it) {
 		if (it->fd != server_fd) {
@@ -44,6 +52,10 @@ Server::~Server() {
 	polling.clear();
 }
 
+/*	
+	Self explained block of functions
+	related to the things done already
+*/
 const int	&Server::getPort() const {return (port);}
 
 bool	Server::validPassword(const std::string &pass) const {
@@ -66,26 +78,39 @@ const char *Server::errorSocket::what() const throw() {
 	return ("Error: 'constructor' socket failed, server fd returned: '-1'");
 }
 
+/*
+	check the count of arguments
+*/
 void	Server::ac_check(int ac) const {
 	if (ac != 3)
 		throw errorAc();
 }
 
+/*
+	check the validity of the port
+	if it can be open for IRC
+*/
 void	Server::port_check(char **av) const {
 	try {
 		int tmp = std::stoi(av[1]);
-		if (tmp <= 0 || tmp > 65535)
+		if (tmp <= 2 || tmp > 65535)
 			throw errorPort();
 	} catch (std::exception &e) {
 		throw errorPort();
 	}
 }
 
+/*
+	checking of the automatic server socket
+*/
 void	Server::socket_check(int fd) const {
 	if (fd == -1)
 		throw errorSocket();
 }
 
+/*
+	Welcome message after sever gets through constructor
+*/
 void	Server::printDone() const {
 	std::cout << "\033[1m";
 	std::cout << "       .d8888b. " << std::endl;
@@ -131,6 +156,11 @@ void	Server::setupServer() {
 	}
 }
 
+/*
+	if the error would happen in:
+	- Server constructor
+	- setupServer member
+*/
 void	Server::cleanExit() {
 	for (auto it = polling.begin(); it != polling.end(); ++it) {
 		if (it->fd != server_fd) {
@@ -148,6 +178,9 @@ void	Server::cleanExit() {
 	exit(EXIT_FAILURE);
 }
 
+/*
+	possible errors for used functions
+*/
 const char *Server::errorOptions::what() const throw() {
 	return ("Error: 'setup' setsockopt(2) failed, rtfm");
 }
@@ -164,6 +197,10 @@ const char *Server::errorListen::what() const throw() {
 	return ("Error: 'setup' listen(2) failed, rtfm");
 }
 
+/*
+	setting and dissabling some of the socket options
+	as to be more intact with how socket should be used
+*/
 void	Server::socket_options() {
 	int tmp = 1, check = setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &tmp, sizeof(tmp));
 	if (check == -1)
@@ -175,6 +212,10 @@ void	Server::socket_options() {
 	std::cout << "\033[33m\033[1m" <<  "Nagle " << "\033[0m" << std::flush;
 }
 
+/*
+	as per the subject requirments
+	every socket used by server is non blocking
+*/
 void	Server::non_blocking() {
 	int flag = fcntl(server_fd, F_SETFL, O_NONBLOCK);
 	if (flag == -1)
@@ -182,6 +223,10 @@ void	Server::non_blocking() {
 	std::cout << "fcntl " << "\033[33m\033[1m" << "NONBLOCK " << "\033[0m" << std::flush;
 }
 
+/*
+	binding the address to be used for the server
+	letting to conenction with the port from args
+*/
 void	Server::assign_address() {
 	struct sockaddr_in address;
 	memset(&address, 0, sizeof(address));
@@ -194,6 +239,10 @@ void	Server::assign_address() {
 	std::cout << "bind " << "\033[33m\033[1m" << "IPV4 " << "\033[0m" << std::flush;
 }
 
+/*
+	opening listen for the said port
+	eventhough bind on bot from constructor
+*/
 void	Server::use_to_connect() {
 	int check = listen(server_fd, SOMAXCONN);
 	if (check == -1)
@@ -204,6 +253,7 @@ void	Server::use_to_connect() {
 /*
 	now we are getting to part with running the server
 	everything here is contained in the runServer ft
+	run Error doesn't quit, server should be invincible
 */
 void	Server::runError(const std::string &msg, const int &fd) const {
 	if (fd == 0)
@@ -212,6 +262,10 @@ void	Server::runError(const std::string &msg, const int &fd) const {
 		std::cerr << "Error: 'runServer' " << msg << " for '" << fd << "'" << std::endl;
 }
 
+/*
+	basic sending of the message in IRC format
+	to the particular user on said file descriptor
+*/
 void	Server::sendMsg(std::string msg, int fd) {
 	if (fd < 0)
 		return;
@@ -223,6 +277,10 @@ void	Server::sendMsg(std::string msg, int fd) {
 	}
 }
 
+/*
+	accepting new connections and getting User information
+	that will be used by the Client handler side of server
+*/
 void	Server::acceptingClient() {
 	struct	sockaddr_in client_info;
 	memset(&client_info, 0, sizeof(client_info));
@@ -256,6 +314,9 @@ void	Server::acceptingClient() {
 	}
 }
 
+/*
+	debugging function, should be unused in finished server
+*/
 void	Server::recvErrno() {
 	if (errno == EAGAIN || errno == EWOULDBLOCK)
 		std::cerr << "it was EAGAIN" << std::endl;
@@ -278,6 +339,8 @@ void	Server::recvErrno() {
 /*
 	check if there is any other way than checking errno values
 	after getting the result from the recv and etc.
+	mainly checking if message should be ignored/buffered/used
+	and possibly for disconnecting the users
 */
 Server::iter	Server::receivingData(iter it) {
 	std::string	buffer;
@@ -323,6 +386,10 @@ Server::iter	Server::receivingData(iter it) {
 	return (++it);
 }
 
+/*
+	checking for the Errors from polling
+	and removing unsafe connections
+*/
 Server::iter	Server::removeError(iter it) {
 	std::cout << "Client with fd: '" << it->fd << "' had an error" << std::endl;
 	if (close(it->fd) != 0)
@@ -330,11 +397,19 @@ Server::iter	Server::removeError(iter it) {
 	return (polling.erase(it));
 }
 
+/*
+	file descriptor failed and wasn't caught earlier
+	most likely should never happen, just for poll check
+*/
 Server::iter	Server::removeInvalid(iter it) {
 	std::cout << "File descriptor was never opened or already closed: " << it->fd << std::endl;
 	return (polling.erase(it));
 }
 
+/*
+	removal of disconnected users
+	calling Client side handlers
+*/
 Server::iter	Server::removeDisconnected(iter it) {
 	std::cout << "Client with: " << it->fd << " has disconnected" << std::endl;
 	clients.disconnect(it->fd);
@@ -343,6 +418,11 @@ Server::iter	Server::removeDisconnected(iter it) {
 	return (polling.erase(it));
 }
 
+/*
+	main loop of the server with polling data
+	the time out should never happen as -1 is set
+	other than that calling proper helper members
+*/
 void	Server::runServer() {
 	struct pollfd polling_pool;
 	memset(&polling_pool, 0, sizeof(polling_pool));

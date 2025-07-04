@@ -38,7 +38,7 @@ void	handler(int signum);
 /*
 	handler and actual signal flag
 	to shutdown bot gracefully
-	below the implementation
+	below bot class and fts
 */
 class	Bot {
 	private:
@@ -47,6 +47,11 @@ class	Bot {
 		FileType	file_type;
 		int	server_port;
 		std::string server_password, server_ip;
+		/*
+			above is the part filled by the user
+			only exception is the file_type check
+			below things handled automatically
+		*/
 		int	bot_fd, connect_to_bot_fd;
 		std::vector<struct pollfd> polling;
 		std::vector<struct pollfd> fresh;
@@ -75,16 +80,29 @@ class	Bot {
 		void	setupSockets();
 		void	cleanExit(const std::string &msg);
 		/*
-			acutally connecting to the server
-			and sending all requried messages
+			helper typedef to pass around easier
+			the iterator used by the polling
 		*/
 		typedef	std::vector<struct pollfd>::iterator iter;
+		/*
+			acutally connecting to the server
+			creating the channel and waiting
+		*/
 		void	initialPolling();
 		int	tryConnect();
+		/*
+			logic for managing the connections
+			the ones from the server side
+			and ones to call for file transfer
+		*/
 		void	runBot();
 		void	acceptUser();
 		iter	recvUser(iter it);
 		void	recvServer();
+		/*
+			helper functions for the manager
+			and actual file transfer function
+		*/
 };
 
 #endif
