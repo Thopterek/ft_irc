@@ -1,22 +1,53 @@
 #include "../client/User.hpp"
 
-void    directMessage(const std::string& target,
-                      const std::string& message,
-                      int fd, Client& client)
+static bool isUser(const std::string& target)
 {
-    std::unordered_map<int, Users*> users { client.getUsers };
-    for (auto user : users)
+    return (std::isalpha(target.at(0)));
+}
+
+static bool isChannel(const std::string& target)
+{
+    return (target.at(0) == '#');
+}
+
+static void    directMessage(const std::vector<std::string>& params
+                             , int fd, Client& client)
+{
+    const std::string& target { params.at(0) };
+    const std::string& message { params.at(1) };
+
+    auto    users { client.getUsers() };
+    for (const auto& user : users)
     {
-        if (client.ircCapitalize(target) == client.ircCapitalize(user->getNickName()))
+        // Nicknames are unique in the server.
+        if (client.ircCapitalize(target) == 
+                client.ircCapitalize(user.second->getNickName()))
         {
-            user->respond(client[fd]->getSource() +
-                            " PRIVMSG " + target + " :" + message);
+            const std::string  targetMessage { target + " :" + message + "\r\n" };
+            user->respond(client[fd]->getSource() + " PRIVMSG " + targetMessage);
             return ;
         }
     }
 }
+//  TODO: Inform Chris about the channel Privmsg.
+static void messageChannel(const std::vector<std::string>& params,
+                           int fd, Client& client)
+{
+    User&   user { client[fd] };
+    const std::string&  target { params.at(0) };
+    auto    channels { user.getChannels() };
+    auto    iter { channels.find(target) };
+    if (iter == channels.end())
+    {
+        user.handleError(Errors::ERR_CANNOTSENDTOCHAN, "PRIVMSG");
+        return ;
+    }
+    const std::string  targetMessage { target + " :" + params.at(1) + "\r\n" };
+    const std::string   msg { user.getSource() + " PRIVMSG " + targetMessage };
+    iter->second->broadcast(message, &user);
+}
 
-void    privmsg(Client& client, int fd, std::vector<std::string> params)
+void    privmsg(Client& client, int fd, const std::vector<std::string> params)
 {
     User&   user { client[fd] };
 
@@ -25,21 +56,20 @@ void    privmsg(Client& client, int fd, std::vector<std::string> params)
         handleError(Errors::ERR_NOTREGISTERED, "PRIVMSG");
         return ;
     }
-    if (params.size() != 2 || params.at(0).empty())
+    if (params.size() < 1 || params.at(0).empty())
     {
-        handleError(Errors::ERR_NORECIPIENT, "PRIVMSG");
+        user.handleError(Errors::ERR_NORECIPIENT, "PRIVMSG");
         return ;
     }
-    if (params.at(1).empty())
+    if (params.size() < 2 || params.at(1).empty())
     {
-        handleError(Errors::ERR_NOTEXTTOSEND, "PRIVMSG");
+        user.handleError(Errors::ERR_NOTEXTTOSEND, "PRIVMSG");
         return ;
     }
-    if (std::isalpha(params[0].[0]))
-    {
-        const std::string&  target { params[0] };
-        directMessage(target, params[1], fd, client);
-    }
+    if (isUser(params[0]))
+        directMessage(params, fd, client);
+    else if (isChannel(params[0]))
+        messageChannel(params, fd, client);
     else
-        messageChannel(params);
+        user.handleError(Errors::ERR_NORECIPIENT, "PRIVMSG");
 }

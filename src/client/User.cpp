@@ -136,7 +136,7 @@ void    User::respond(std::string_view msg)
         throw   std::runtime_error("Unable to send message");
 }
 
-const std::set<Channel*>&   getChannels() const
+const std::map<const std::string, Channel*>&   getChannels() const
 {
     return (m_channels);
 }
@@ -153,12 +153,14 @@ RegStatus User::getStatus() const
 
 void    User::addToChannel(Channel* channel)
 {
-    m_channels.insert(channel);
+    m_channels.emplace(channel->getChannelName(), channel);
 }
 
 void    User::removeFromChannels(Channel* channel)
 {
-    m_channels.erase(channel);
+    auto  iter { m_channels.find(channel->getChannelName()) };
+    if (iter != end(m_channels))
+        m_channels.erase(iter);
 }
 
 void    User::incrementChannelCount()

@@ -24,8 +24,8 @@ class   User
     RegStatus           m_status;
     const std::string   m_userIp, m_hostName, m_serverPwd;
     std::string         m_nickName, m_oldNick, m_userName, m_realName, m_buffer; 
-    static const std::string            m_serverName;
-    std::set<Channel*>                  m_channels;
+    static const std::string                m_serverName;
+    std::map<const std::string, Channel*>   m_channels;
     std::map<ErrorValues, std::string>  m_errors;
     std::string buildMsg(int, const std::string&, const std::string&);
   public:
@@ -51,7 +51,8 @@ class   User
     std::string         getBuffer() const;
     int                 getFd() const;
     RegStatus           getStatus() const;
-    const std::set<Channel*>&  getChannels() const;
+    const std::map<const std::string, Channel*>&  
+                        getChannels() const;
     int                 getChannelCount() const;
     std::string         getSource() const;
 

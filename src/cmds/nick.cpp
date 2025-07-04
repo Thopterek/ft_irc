@@ -10,8 +10,9 @@ static ErrorValues validate(Client& client, int fd, std::string_view nick)
         if (c == ' ' || c == ',' || c == '*' || c == '?' || c == '!' || c == '@')
             return (Errors::ERR_ERRONEUSNICKNAME);
     const std::string capitalized { client.ircCapitalize(nick) };
-    for (auto user : client.m_clients)
-        if (user->m_fd != client[fd].m_fd)
+    const std::unordered_map<int, User*> users { client.getUsers() };
+    for (auto user : users)
+        if (user->getFd() != client[fd].getFd())
             if (capitalized == ircCapitalize(user->getNickName()))
                 return (Errors::ERR_NICKNAMEINUSE);
     return (Errors::ERR_NONE);
@@ -29,8 +30,6 @@ void    nick(Client& client, int fd, std::vector<std::string> param)
     if (param.empty())
     {
         user.handleErrors(Errors::ERR_NONICKNAMEGIVEN, "NICK");
-       // const std::string&  error { user.errors.at(Errors::ERR_NONICKNAMEGIVEN) };
-       // user.respond(user.buildMsg(Errors::ERR_NONICKNAMEGIVEN, "NICK", error));
         return ;
     }
 
