@@ -366,20 +366,23 @@ Server::iter	Server::receivingData(iter it) {
 		return (it);
 	}
 	buffer.resize(check_receive);
-	std::cout << it->fd << " has sent: " << std::flush;
-	for (auto print = buffer.begin(); print != buffer.end(); ++print)
-		std::cout << *print << std::flush;
 	if (buffer.size() > 2) {
-		auto slash_n = std::prev(buffer.end(), 1);
-		auto carnage = std::prev(buffer.end(), 2);
-		if (*slash_n == '\n' && *carnage == '\r') {
-			std::cout << "message ended with carnage and newline" << std::endl;
+		std::string::size_type line_feed = buffer.find("\r\n");
+		if (line_feed == std::string::npos)
 			clients[it->fd].buffer(buffer.data());
-			pars.parseAndDispatch(clients[it->fd]);
-		}
 		else {
-			std::cout << "message is going to be buffered" << std::endl;
-			clients[it->fd].buffer(buffer.data());	
+			int start = 0;
+			int offset = 2;
+			while (line_feed != std::string::npos) {
+				std::string tmp = buffer.substr(start, line_feed - start);
+				clients[it->fd].buffer(tmp.data());
+				pars.parseAndDispatch(clients[it->fd]);
+				start = line_feed + offset;
+				line_feed = buffer.find("\r\n", start);
+			}
+			std::string leftover = buffer.substr(start, buffer.size() - start);
+			if (leftover.empty() == false)
+				clients[it->fd].buffer(leftover.data());
 		}
 	}
 	buffer.clear();

@@ -87,9 +87,11 @@ class	Bot {
 		/*
 			acutally connecting to the server
 			creating the channel and waiting
+			sending the intial combination
 		*/
 		void	initialPolling();
 		int	tryConnect();
+		int	sendInitial();
 		/*
 			logic for managing the connections
 			the ones from the server side
@@ -98,11 +100,13 @@ class	Bot {
 		void	runBot();
 		void	acceptUser();
 		iter	recvUser(iter it);
-		void	recvServer();
+		iter	recvServer(iter it);
 		/*
 			helper functions for the manager
 			and actual file transfer function
+			plus the sending the messages
 		*/
+		// void	sendMsg(std::string msg, int fd);
 };
 
 #endif

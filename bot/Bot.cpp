@@ -31,6 +31,51 @@ server_password(""), server_ip(""), bot_fd(-1), connect_to_bot_fd(-1), polling()
 }
 
 /*
+	Destructor with some safety checks
+	handling everything after going to runBot
+*/
+Bot::~Bot() {
+	if (bot_fd > 0) {
+		if (close(bot_fd) != 0)
+			std::cerr << "Close for bot_fd in destructor failed" << std::endl;
+	}
+	if (connect_to_bot_fd > 0) {
+		if (close(connect_to_bot_fd) != 0)
+			std::cerr << "Close for connect_to_bot_fd in destructor failed" << std::endl;
+	}
+	for (iter it = polling.begin(); it != polling.end(); ++it) {
+		if (it->fd != bot_fd && it->fd != connect_to_bot_fd)
+			close(it->fd);
+	}
+	polling.clear();
+}
+
+/*
+	Helps with handling signal as to not break program
+	when user is inputing the bot information
+*/
+void	Bot::checkEof() {
+	if (g_shutdown == 0) {
+		if (std::cin.eof()) {
+			std::cin.clear();
+			freopen("/dev/tty", "r", stdin);
+		}
+	}
+}
+
+/*
+	wrappers for repeated questions for user
+*/
+void	Bot::printRequest(const std::string &rules) const {
+	std::cout << "\033[33m\033[1m" << "Rules: "  << "\033[0m" << rules << std::endl;
+	std::cout << "\033[33m\033[1m" << "Please fill out: " << "\033[0m" << std::flush;
+}
+
+void	Bot::printMistake(const std::string &mistake) const {
+	std::cout << "\033[31m\033[1m" << mistake << ", try again: " << "\033[0m" << std::flush;
+}
+
+/*
 	name is gonna be used as the:
 	real name, nick, username
 */
@@ -195,7 +240,7 @@ void	Bot::initialPolling() {
 
 /*
 	try to connect to the server, if works correctly send:
-	1:PASS, 2:USER, 3:NICK just like any user would do
+	1:PASS, 2:NICK, 3:USER just like any user would do
 	then joining the particular channel to check messages
 */
 int	Bot::tryConnect() {
@@ -206,6 +251,32 @@ int	Bot::tryConnect() {
 	int check = connect(bot_fd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server));
 	if (check != 0) {
 		std::cerr << "Connect failed" << std::endl;
+		return (1);
+	}
+	return (sendInitial());
+}
+
+/*
+	Sending and checking if it goes through
+	1:PASS, 2:NICK, 3:USER, 4:JOIN
+*/
+int	Bot::sendInitial() {
+	std::string pass = "PASS " + server_password + "\r\n";
+	ssize_t	check = send(bot_fd, pass.c_str(), pass.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending pass failed" << std::endl;
+		return (1);
+	}
+	std::string nick = "NICK " + bot_name + "\r\n";
+	check = send(bot_fd, nick.c_str(), nick.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending nick failed" << std::endl;
+		return (1);
+	}
+	std::string user = "USER " + bot_name + " 0 * " + bot_name + "\r\n";
+	check = send(bot_fd, user.c_str(), user.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending user failed" << std::endl;
 		return (1);
 	}
 	return (0);
@@ -273,19 +344,22 @@ Bot::iter	Bot::recvUser(iter it) {
 	getting the messages that were sent from the server
 	checking for the particular types to send the response
 */
-void	Bot::recvServer() {
+Bot::iter	Bot::recvServer(iter it) {
 	std::string	buffer;
 	buffer.resize(512);
-	int check = recv(bot_fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
-	if (check < 1)
-		std::cerr << "WE GOT AN ERROR" << std::endl;
+	int check = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
+	if (check < 1) {
+		close(it->fd);
+		bot_fd = -1;
+		return (polling.erase(it));
+	}
 	else {
 		buffer.resize(check);
-		// if (buffer == "info\n\r")
 		for (auto print = buffer.begin(); print != buffer.end(); ++print)
 			std::cout << *print << std::flush;
 	}
 	buffer.clear();
+	return (++it);
 }
 
 /*
@@ -308,10 +382,8 @@ void	Bot::runBot() {
 				}
 				else if (it->fd != connect_to_bot_fd && it->fd != bot_fd && (it->revents & POLLIN) && g_shutdown == 0)
 					it = recvUser(it);
-				else if (it->fd == bot_fd && (it->revents & POLLIN) && g_shutdown == 0) {
-					recvServer();
-					++it;
-				}
+				else if (it->fd == bot_fd && (it->revents & POLLIN) && g_shutdown == 0)
+					it = recvServer(it);
 				else
 					++it;
 			}
@@ -320,49 +392,4 @@ void	Bot::runBot() {
 			fresh.clear();
 		}
 	}
-}
-
-/*
-	Destructor with some safety checks
-	handling everything after going to runBot
-*/
-Bot::~Bot() {
-	if (bot_fd > 0) {
-		if (close(bot_fd) != 0)
-			std::cerr << "Close for bot_fd in destructor failed" << std::endl;
-	}
-	if (connect_to_bot_fd > 0) {
-		if (close(connect_to_bot_fd) != 0)
-			std::cerr << "Close for connect_to_bot_fd in destructor failed" << std::endl;
-	}
-	for (iter it = polling.begin(); it != polling.end(); ++it) {
-		if (it->fd != bot_fd && it->fd != connect_to_bot_fd)
-			close(it->fd);
-	}
-	polling.clear();
-}
-
-/*
-	Helps with handling signal as to not break program
-	when user is inputing the bot information
-*/
-void	Bot::checkEof() {
-	if (g_shutdown == 0) {
-		if (std::cin.eof()) {
-			std::cin.clear();
-			freopen("/dev/tty", "r", stdin);
-		}
-	}
-}
-
-/*
-	wrappers for repeated questions for user
-*/
-void	Bot::printRequest(const std::string &rules) const {
-	std::cout << "\033[33m\033[1m" << "Rules: "  << "\033[0m" << rules << std::endl;
-	std::cout << "\033[33m\033[1m" << "Please fill out: " << "\033[0m" << std::flush;
-}
-
-void	Bot::printMistake(const std::string &mistake) const {
-	std::cout << "\033[31m\033[1m" << mistake << ", try again: " << "\033[0m" << std::flush;
 }
