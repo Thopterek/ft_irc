@@ -279,6 +279,12 @@ int	Bot::sendInitial() {
 		std::cerr << "Error: sending user failed" << std::endl;
 		return (1);
 	}
+	std::string join = "JOIN #" + bot_name + "\r\n";
+	check = send(bot_fd, join.c_str(), join.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending user failed" << std::endl;
+		return (1);
+	}
 	return (0);
 }
 
@@ -306,6 +312,7 @@ void	Bot::acceptUser() {
 			new_client.events = POLLIN;
 			fresh.push_back(new_client);
 			std::cout << "USER CONNECTED TO THE BOT" << std::endl;
+			sendBinary(client_fd);
 		}
 	}
 }
@@ -357,9 +364,11 @@ Bot::iter	Bot::recvServer(iter it) {
 		buffer.resize(check);
 		for (auto print = buffer.begin(); print != buffer.end(); ++print)
 			std::cout << *print << std::flush;
+		if (buffer == "info")
+			sendInfo();
+		else if (buffer == "DCC GET " + bot_name + " " + file.first)
+			sendDCC();
 	}
-	// send DCC SEND <filename> <ip> <port> <filesize>
-	// send INFO <filename> <description>
 	buffer.clear();
 	return (++it);
 }
@@ -418,8 +427,27 @@ void	Bot::sendBinary(int fd) {
 		check = send(fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
 		if (check == -1) {
 			std::cerr << "Error: data couldn't be send properly" << std::endl;
-			break;
+			return;
 		}
 		total += check;
+	}
+	std::cout << "File send properly to client: " << fd << std::endl;
+}
+
+void	Bot::sendInfo() {
+	std::string info = "PRIVMSG #" + bot_name + " " + file.first + " " + file.second;
+	int check = send(bot_fd, info.c_str(), info.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending info failed" << std::endl;
+		return ;
+	}
+}
+
+void	Bot::sendDCC() {
+	std::string info = "DCC SEND #" + bot_name + " " + file.first + " port: " + std::to_string(connect_to_bot_fd);
+	int check = send(bot_fd, info.c_str(), info.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending info failed" << std::endl;
+		return ;
 	}
 }

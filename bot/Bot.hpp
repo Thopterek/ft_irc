@@ -107,6 +107,8 @@ class	Bot {
 			plus the sending the messages
 		*/
 		void	sendBinary(int fd);
+		void	sendInfo();
+		void	sendDCC();
 };
 
 #endif
