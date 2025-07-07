@@ -11,7 +11,7 @@ void	handler(int signum) {
 	Constructor made just for testing
 	prefilled information without checks
 */
-Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "simple text file"), file_type(FileType::TEXT),
+Bot::Bot(std::string name) : bot_name(name), file("img.png", "small png file"), file_type(FileType::BINARY),
 server_port(123), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
@@ -111,7 +111,7 @@ void	Bot::setupFile() {
 		needed logic to setup the types of file
 		as for now file_type wasn't great for it
 	*/
-	file_type = FileType::TEXT;
+	file_type = FileType::BINARY;
 	printRequest("write a description between 1 and 510 characters for it");
 	while (file.second == "" && g_shutdown == 0) {
 		checkEof();
@@ -250,7 +250,7 @@ int	Bot::tryConnect() {
 	server.sin_addr.s_addr = inet_addr(server_ip.c_str());
 	int check = connect(bot_fd, reinterpret_cast<struct sockaddr*>(&server), sizeof(server));
 	if (check != 0) {
-		std::cerr << "Connect failed" << std::endl;
+		std::cerr << "Connect to IRC server failed" << std::endl;
 		return (1);
 	}
 	return (sendInitial());
@@ -358,6 +358,8 @@ Bot::iter	Bot::recvServer(iter it) {
 		for (auto print = buffer.begin(); print != buffer.end(); ++print)
 			std::cout << *print << std::flush;
 	}
+	// send DCC SEND <filename> <ip> <port> <filesize>
+	// send INFO <filename> <description>
 	buffer.clear();
 	return (++it);
 }
@@ -391,5 +393,33 @@ void	Bot::runBot() {
 				polling.push_back(saved);
 			fresh.clear();
 		}
+	}
+}
+
+/*
+	getting the path to the file and opening in binary mode
+	skipping all the newlines and getting its size
+	finding out the end of the file and loading into vector
+	then looping through till all of it is being sent
+*/
+void	Bot::sendBinary(int fd) {
+	std::string path = "bot/files_to_transfer/" + file.first;
+	std::ifstream	load_file(path, std::ios::binary);
+	load_file.unsetf(std::ios::skipws);
+	load_file.seekg(0, std::ios::end);
+	std::streampos	size = load_file.tellg();
+	load_file.seekg(0, std::ios::beg);
+	std::vector<char>	buffer;
+	buffer.reserve(size);
+	buffer.insert(buffer.begin(), std::istream_iterator<char>(load_file), std::istream_iterator<char>(load_file));
+	ssize_t total = 0;
+	ssize_t	check = 0;
+	while (total < static_cast<ssize_t>(buffer.size())) {
+		check = send(fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
+		if (check == -1) {
+			std::cerr << "Error: data couldn't be send properly" << std::endl;
+			break;
+		}
+		total += check;
 	}
 }

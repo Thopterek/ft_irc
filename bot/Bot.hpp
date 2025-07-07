@@ -106,7 +106,7 @@ class	Bot {
 			and actual file transfer function
 			plus the sending the messages
 		*/
-		// void	sendMsg(std::string msg, int fd);
+		void	sendBinary(int fd);
 };
 
 #endif
