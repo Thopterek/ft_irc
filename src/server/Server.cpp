@@ -194,6 +194,7 @@ int	Server::receivingData(const int &sockfd) {
 	}
 	else if (check_receive == 0) {
 		std::cout << "Client with fd: '" << sockfd << "' disconnected" << std::endl;
+		muss mit dem socket recive glaube channel udpate machen
 		close(sockfd);
 		return (EXIT_FAILURE);
 	}

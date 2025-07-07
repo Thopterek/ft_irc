@@ -7,3 +7,9 @@ int	main(int ac, char **av) {
 	snc.runServer();
 	return (EXIT_SUCCESS);
 }
+
+
+Gib mir TLS-Zertifikat-Rolle“
+„Exportiertes Kibana Dashboard bitte“
+„Mach Bastion-Host Setup“
+„Auditd-Rolle erstellen“
