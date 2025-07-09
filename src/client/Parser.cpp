@@ -6,7 +6,7 @@
 /*   By: ndziadzi <ndziadzi@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/24 17:52:15 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/07/09 11:12:35 by ndziadzi         ###   ########.fr       */
+/*   Updated: 2025/07/09 13:18:22 by ndziadzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,7 +92,7 @@ void    Parser::parseAndDispatch(Client &clients, int fd)
         if (!tokens.empty())
             dispatchCommand(clients, fd, tokens);
     }
-    catch (const std::runtime_error& e)
+    catch (const std::out_of_range& e)
     {
         user.respond(e.what());
     }

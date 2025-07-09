@@ -308,9 +308,6 @@ void	Server::acceptingClient() {
 			std::cout << "and with fd: '" << client_fd << "' got accepted" << std::endl;
 			std::cout << "his hostname is '" << hostname << "'" << std::endl;
 			fresh.push_back(new_client);
-			/*
-				pass in into .connect the server password
-			*/
 			clients.connect(client_fd, address, hostname, password);
 			sendMsg("Welcome to our IRC server", client_fd);
 		}

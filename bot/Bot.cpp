@@ -12,7 +12,7 @@ void	handler(int signum) {
 	prefilled information without checks
 */
 Bot::Bot(std::string name) : bot_name(name), file("img.png", "small png file"), file_type(FileType::BINARY),
-server_port(123), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
+server_port(6667), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
 }
@@ -367,10 +367,12 @@ Bot::iter	Bot::recvServer(iter it) {
 		buffer.resize(check);
 		for (auto print = buffer.begin(); print != buffer.end(); ++print)
 			std::cout << *print << std::flush;
-		if (buffer == "info")
-			sendInfo();
-		else if (buffer == "DCC GET " + bot_name + " " + file.first)
-			sendDCC();
+		if (buffer.size() > 7) {
+			if (buffer.substr(buffer.size() - 7) == ":info\r\n")
+				sendInfo();
+			else if (buffer == "DCC GET " + bot_name + " " + file.first)
+				sendDCC();
+		}
 	}
 	buffer.clear();
 	return (++it);
@@ -438,7 +440,7 @@ void	Bot::sendBinary(int fd) {
 }
 
 void	Bot::sendInfo() {
-	std::string info = "PRIVMSG #" + bot_name + " " + file.first + " " + file.second;
+	std::string info = "PRIVMSG #" + bot_name + " " + file.first + " description: " + file.second + "\r\n";
 	int check = send(bot_fd, info.c_str(), info.size(), MSG_DONTWAIT);
 	if (check == -1) {
 		std::cerr << "Error: sending info failed" << std::endl;
