@@ -1,6 +1,7 @@
 #include "../client/User.hpp"
+#include "../client/Parser.hpp"
 
-static ErrorValues validate(Client& client, int fd, std::string_view nick)
+static Errors validate(Client& client, int fd, const std::string &nick)
 {
     if (nick.empty())
         return (Errors::ERR_NONICKNAMEGIVEN);
@@ -12,17 +13,17 @@ static ErrorValues validate(Client& client, int fd, std::string_view nick)
     const std::string capitalized { client.ircCapitalize(nick) };
     const std::unordered_map<int, User*> users { client.getUsers() };
     for (auto user : users)
-        if (user->getFd() != client[fd].getFd())
-            if (capitalized == ircCapitalize(user->getNickName()))
+        if (user.second->getFd() != client[fd].getFd())
+            if (capitalized == client.ircCapitalize(user.second->getNickName()))
                 return (Errors::ERR_NICKNAMEINUSE);
     return (Errors::ERR_NONE);
 }
 
-void    nick(Client& client, int fd, std::vector<std::string> param)
+void    nick(Client& client, int fd, const std::vector<std::string> &param)
 {
     User&       user { client[fd] };
 
-    if (user.getStatus == RegStatus::CONNECTED)
+    if (user.getStatus() == RegStatus::CONNECTED)
     {
         user.respond("ERROR :You must send PASS command before registering.");
         return ;
@@ -34,11 +35,11 @@ void    nick(Client& client, int fd, std::vector<std::string> param)
     }
 
     const std::string&  newNick { param.front() };
-    ErrorValues err { validate(client, fd, newNick) };
+    Errors err { validate(client, fd, newNick) };
 
     if (err != Errors::ERR_NONE)
     {
-        user.respond(user.buildMsg(err, "NICK", user.errors.at(err)));
+        user.handleErrors(err, "NICK");
         return ;
     }
     if (user.getNickName().empty())
@@ -46,10 +47,13 @@ void    nick(Client& client, int fd, std::vector<std::string> param)
         user.setNickName(newNick);
         return ;
     }
-    if (ircCapitalize(user.getNickName()) == ircCapitalize(newNick))
+    if (client.ircCapitalize(user.getNickName()) == client.ircCapitalize(newNick))
         return ;
-    for (auto member : getChannels())
-        member->broadcast(user.getSource() + " NICK :" + newNick, user);
+    /*
+        after merging with channel handling uncomment and test
+    */
+    // for (auto member : getChannels())
+    //     member->broadcast(user.getSource() + " NICK :" + newNick, user);
     user.setOldNick(user.getNickName());
     user.setNickName(newNick);
 }

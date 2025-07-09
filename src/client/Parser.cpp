@@ -6,18 +6,20 @@
 /*   By: ndziadzi <ndziadzi@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/24 17:52:15 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/06/27 15:41:06 by ndziadzi         ###   ########.fr       */
+/*   Updated: 2025/07/09 11:12:35 by ndziadzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "Parser.hpp"
+
+std::unordered_map<std::string, Parser::Cmd> Parser::m_cmds;
 
 Parser::Parser()
 {
     m_cmds.emplace("PASS", pass);
     m_cmds.emplace("NICK", nick);
     m_cmds.emplace("USER", user);
-    m_cmds.emplace("PRIVMSG", privMsg);
+    m_cmds.emplace("PRIVMSG", privmsg);
     // m_cmds.emplace("INVITE", handleInvite);
     // m_cmds.emplace("CAP", handleCap);
     // m_cmds.emplace("JOIN", handleJoin);
@@ -57,8 +59,10 @@ std::vector<std::string>    Parser::tokenize(std::string_view msg)
 }
 
 void    
-Parser::dispatchCommand(User& user, const std::vector<std::string>& tokens)
+Parser::dispatchCommand(Client& client, int fd, const std::vector<std::string>& tokens)
 {
+    User&   user { client[fd] };
+    
     if (tokens.empty())
         return ;
 
@@ -68,23 +72,25 @@ Parser::dispatchCommand(User& user, const std::vector<std::string>& tokens)
 
     try
     {
-        m_cmds.at(cmd)(user, params);
+        m_cmds.at(cmd)(client, fd, params);
         std::cout << "DEBUG: it went into handler" << std::endl;
     }
     catch (const std::out_of_range&)
     {
-        user.handleError(Error::ERR_UNKNOWNCOMMAND, cmd);
+        user.handleErrors(Errors::ERR_UNKNOWNCOMMAND, cmd);
     }
 }
 
-void    Parser::parseAndDispatch(User& user)
+void    Parser::parseAndDispatch(Client &clients, int fd)
 {
+    User&   user { clients[fd] };
+    
     std::cout << user.getBuffer() << ": a whole buffer" << std::endl;
     try
     {   
         std::vector<std::string>    tokens{ tokenize(user.getBuffer()) };
         if (!tokens.empty())
-            dispatchCommand(user, tokens);
+            dispatchCommand(clients, fd, tokens);
     }
     catch (const std::runtime_error& e)
     {

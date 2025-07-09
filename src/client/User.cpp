@@ -1,10 +1,11 @@
 #include "User.hpp"
+// #include "../../inc/Channel.hpp"
 
-const std::string        m_serverName = "ncs-irc.local";
+const std::string        User::m_serverName = "ncs-irc.local";
 
 User::User(int fd, std::string_view ip, std::string_view hostName, std::string_view serverPwd)
-    :   m_fd{fd}, m_status{RegStatus::CONNECTED}, m_userIp{ip},
-        m_hostName{hostName}, m_serverPwd{ serverPwd } 
+    :   m_fd{fd}, m_status{RegStatus::CONNECTED}, m_userIp{ip}, m_serverPwd{ serverPwd },
+    m_hostName{hostName}
 {
     m_errors.emplace(Errors::ERR_NONE, "");
     m_errors.emplace(Errors::ERR_NICKMORETHAN9CHARS, ": Toomuch letters");
@@ -27,7 +28,7 @@ void    User::setNickName(std::string_view nickName)
     m_nickName = nickName;
 }
 
-void    User::setNickName(std::string_view oldNick)
+void    User::setOldNick(std::string_view oldNick)
 {
     m_oldNick = oldNick;
 }
@@ -45,6 +46,10 @@ void    User::setRealName(std::string_view realName)
 void    User::setStatus(RegStatus status)
 {
     m_status = status;
+}
+
+void    User::setHostName(std::string_view host) {
+    m_hostName = host;
 }
 
 const std::string&  User::getServerName()
@@ -121,10 +126,10 @@ void    User::handleErrors(Errors errorCode, const std::string& cmd)
 }
 
 std::string    
-User::buildMsg(int errCode, const std::string& cmd, const std::string& errMsg)
+User::buildMsg(Errors errCode, const std::string& cmd, const std::string& errMsg)
 {
     std::string serverPrefix { ":" + getServerName()};
-    std::string errorCode {std::to_string(errCode)};
+    std::string errorCode {std::to_string(static_cast<int>(errCode))};
     
     serverPrefix += (" " + errorCode + " " + getNickName());
     return (serverPrefix + " " + cmd + " " + errMsg + " \r\n");
@@ -136,7 +141,7 @@ void    User::respond(std::string_view msg)
         throw   std::runtime_error("Unable to send message");
 }
 
-const std::map<const std::string, Channel*>&   getChannels() const
+const std::map<const std::string, Channel*>&   User::getChannels() const
 {
     return (m_channels);
 }
@@ -151,17 +156,17 @@ RegStatus User::getStatus() const
     return (m_status);
 }
 
-void    User::addToChannel(Channel* channel)
-{
-    m_channels.emplace(channel->getChannelName(), channel);
-}
+// void    User::addToChannel(Channel* channel)
+// {
+//     m_channels.emplace(channel->getChannelName(), channel);
+// }
 
-void    User::removeFromChannels(Channel* channel)
-{
-    auto  iter { m_channels.find(channel->getChannelName()) };
-    if (iter != end(m_channels))
-        m_channels.erase(iter);
-}
+// void    User::removeFromChannels(Channel* channel)
+// {
+//     auto  iter { m_channels.find(channel->getChannelName()) };
+//     if (iter != end(m_channels))
+//         m_channels.erase(iter);
+// }
 
 void    User::incrementChannelCount()
 {

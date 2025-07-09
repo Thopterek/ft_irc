@@ -9,10 +9,13 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "User.hpp"
 
 class User;
 
+/*
+  fetching of particular message
+  on non command and not registered
+*/
 enum class Errors
 {
     ERR_NONE = 0,
@@ -30,6 +33,8 @@ enum class Errors
     ERR_TOOMANYTARGETS = 407,
     ERR_NORECIPIENT = 411,
     ERR_NOTEXTTOSEND = 412,
+    ERR_UNKNOWNCOMMAND = 421,
+    ERR_NOTREGISTERED = 451
     //RPL_AWAY = 301
 };
 
@@ -49,7 +54,7 @@ class   Client
     void    connect(int, std::string_view, 
                     std::string_view, std::string_view);
     void    disconnect(int);
-    static const std::string&   ircCapitalize(const std::string&);
+    static const std::string   ircCapitalize(const std::string& str);
 };
 
 #endif

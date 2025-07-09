@@ -1,4 +1,5 @@
 #include "../client/User.hpp"
+#include "../client/Parser.hpp"
 
 static bool isUser(const std::string& target)
 {
@@ -24,7 +25,7 @@ static void    directMessage(const std::vector<std::string>& params
                 client.ircCapitalize(user.second->getNickName()))
         {
             const std::string  targetMessage { target + " :" + message + "\r\n" };
-            user->respond(client[fd]->getSource() + " PRIVMSG " + targetMessage);
+            user.second->respond(client[fd].getSource() + " PRIVMSG " + targetMessage);
             return ;
         }
     }
@@ -39,31 +40,31 @@ static void messageChannel(const std::vector<std::string>& params,
     auto    iter { channels.find(target) };
     if (iter == channels.end())
     {
-        user.handleError(Errors::ERR_CANNOTSENDTOCHAN, "PRIVMSG");
+        user.handleErrors(Errors::ERR_CANNOTSENDTOCHAN, "PRIVMSG");
         return ;
     }
     const std::string  targetMessage { target + " :" + params.at(1) + "\r\n" };
     const std::string   msg { user.getSource() + " PRIVMSG " + targetMessage };
-    iter->second->broadcast(message, &user);
+    // iter->second->broadcast(message, &user);
 }
 
-void    privmsg(Client& client, int fd, const std::vector<std::string> params)
+void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
 {
     User&   user { client[fd] };
 
-    if (user.getStatus != RegStatus::REGISTERED)
+    if (user.getStatus() != RegStatus::REGISTERED)
     {
-        user.handleError(Errors::ERR_NOTREGISTERED, "PRIVMSG");
+        user.handleErrors(Errors::ERR_NOTREGISTERED, "PRIVMSG");
         return ;
     }
     if (params.size() < 1 || params.at(0).empty())
     {
-        user.handleError(Errors::ERR_NORECIPIENT, "PRIVMSG");
+        user.handleErrors(Errors::ERR_NORECIPIENT, "PRIVMSG");
         return ;
     }
     if (params.size() < 2 || params.at(1).empty())
     {
-        user.handleError(Errors::ERR_NOTEXTTOSEND, "PRIVMSG");
+        user.handleErrors(Errors::ERR_NOTEXTTOSEND, "PRIVMSG");
         return ;
     }
     if (isUser(params[0]))
@@ -71,5 +72,5 @@ void    privmsg(Client& client, int fd, const std::vector<std::string> params)
     else if (isChannel(params[0]))
         messageChannel(params, fd, client);
     else
-        user.handleError(Errors::ERR_NORECIPIENT, "PRIVMSG");
+        user.handleErrors(Errors::ERR_NORECIPIENT, "PRIVMSG");
 }

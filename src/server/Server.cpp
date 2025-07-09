@@ -311,7 +311,7 @@ void	Server::acceptingClient() {
 			/*
 				pass in into .connect the server password
 			*/
-			clients.connect(client_fd, address, hostname);
+			clients.connect(client_fd, address, hostname, password);
 			sendMsg("Welcome to our IRC server", client_fd);
 		}
 	}
@@ -379,7 +379,7 @@ Server::iter	Server::receivingData(iter it) {
 			while (line_feed != std::string::npos) {
 				std::string tmp = buffer.substr(start, line_feed - start);
 				clients[it->fd].buffer(tmp.data());
-				pars.parseAndDispatch(clients[it->fd]);
+				pars.parseAndDispatch(clients, it->fd);
 				start = line_feed + offset;
 				line_feed = buffer.find("\r\n", start);
 			}

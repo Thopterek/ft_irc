@@ -1,10 +1,11 @@
 EXEC = ircserv
 EXBOT = ircbot
 COMP = c++
-CXXFLAGS = -Wall -Werror -Wextra -Wshadow -std=c++17 -g
+CXXFLAGS = -Wall -Werror -Wextra -Wshadow -std=c++17 -g -Wfatal-errors
 SRCS =	src/main.cpp src/channel/Channel.cpp src/server/Server.cpp \
 		src/client/Client.cpp src/client/User.cpp src/util/Util.cpp \
-		src/client/Parser.cpp src/client/nick.cpp
+		src/client/Parser.cpp src/cmds/nick.cpp src/cmds/pass.cpp \
+		src/cmds/user.cpp src/cmds/privmsg.cpp
 
 BOTSRC = bot/botSetup.cpp bot/Bot.cpp
 

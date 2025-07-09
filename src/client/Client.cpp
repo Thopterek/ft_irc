@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include "User.hpp"
 
 User&   Client::operator[](int socketFd)
 {
@@ -27,7 +28,7 @@ void    Client::disconnect(int fd)
     delete it->second;
     m_users.erase(it);
     --m_userCount;
-    std::cout << "Client with fd: " << socketFd << " removed from the pool" << std::endl;
+    std::cout << "Client with fd: " << fd << " removed from the pool" << std::endl;
 }
 
 const std::string  Client::ircCapitalize(const std::string& str)

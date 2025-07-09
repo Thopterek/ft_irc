@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: sudaniel <sudaniel@student.42heilbronn.de  +#+  +:+       +#+        */
+/*   By: ndziadzi <ndziadzi@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/24 17:14:45 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/06/24 18:04:22 by sudaniel         ###   ########.fr       */
+/*   Updated: 2025/07/09 11:09:08 by ndziadzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,9 +15,9 @@
 
 #include <sstream>
 #include <vector>
+#include <unordered_map>
 #include <cctype>
 #include "User.hpp"
-
 
 class   Parser
 {
@@ -27,11 +27,11 @@ class   Parser
     ~Parser() = default;
     Parser(const Parser&) = delete;
     Parser& operator=(const Parser&) = delete;
-    static void parseAndDispatch(User&);
+    static void parseAndDispatch(Client&, int);
   private:
     static std::unordered_map<std::string, Cmd> m_cmds;
     static std::vector<std::string> tokenize(std::string_view);
-    static  void    dispatchCommand(User&, const std::vector<std::string>&);
+    static  void    dispatchCommand(Client&, int fd, const std::vector<std::string>&);
 };
 
 void    pass(Client&, int, const std::vector<std::string>&);

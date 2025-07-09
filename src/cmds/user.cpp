@@ -1,6 +1,7 @@
 #include "../client/User.hpp"
+#include "../client/Parser.hpp"
 
-void    user(Client& client, int fd, std::vector<std::string> param)
+void    user(Client& client, int fd, const std::vector<std::string> &param)
 {
     User&    user { client[fd] };
     
@@ -21,7 +22,7 @@ void    user(Client& client, int fd, std::vector<std::string> param)
     }
     user.setUserName(param[0]);
     user.setHostName(param.at(1));
-    user.setServerName(param.at(2));
+    // user.setServerName(param.at(2));
     user.setRealName(param.at(3));
     user.setStatus(RegStatus::REGISTERED);
 }

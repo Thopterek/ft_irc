@@ -5,8 +5,9 @@
 #include <string>
 #include <exception>
 #include <string_view>
+#include <map>
 #include "Client.hpp"
-#include "Channel.hpp"
+// #include "../../inc/Channel.hpp"
 
 
 enum class RegStatus 
@@ -16,19 +17,20 @@ enum class RegStatus
     REGISTERED
 };
 
+class Channel;
 
 class   User
 {
     const int           m_fd;
     int                 m_channelCount {0};
     RegStatus           m_status;
-    const std::string   m_userIp, m_hostName, m_serverPwd;
-    std::string         m_nickName, m_oldNick, m_userName, m_realName; 
+    const std::string   m_userIp, m_serverPwd;
+    std::string         m_nickName, m_oldNick, m_userName, m_realName, m_hostName;
     mutable std::string m_buffer;
     static const std::string                m_serverName;
     std::map<const std::string, Channel*>   m_channels;
-    std::map<ErrorValues, std::string>  m_errors;
-    std::string buildMsg(int, const std::string&, const std::string&);
+    std::map<Errors, std::string>  m_errors;
+    std::string buildMsg(Errors, const std::string&, const std::string&);
   public:
     User() = delete;
     explicit User(int, std::string_view, std::string_view, std::string_view);
@@ -40,6 +42,7 @@ class   User
     void        setOldNick(std::string_view);
     void        setUserName(std::string_view);
     void        setRealName(std::string_view);
+    void        setHostName(std::string_view);
     void        setStatus(RegStatus);
     static const std::string&  getServerName();
     std::string         getNickName() const;
@@ -52,13 +55,13 @@ class   User
     std::string&        getBuffer() const;
     int                 getFd() const;
     RegStatus           getStatus() const;
-    const std::map<const std::string, Channel*>&  
+    const std::map<const std::string, Channel*>& 
                         getChannels() const;
     int                 getChannelCount() const;
     std::string         getSource() const;
 
-    void        addToChannel(Channel*);
-    void        removeFromChannels(Channel*);
+    // void        addToChannel(Channel*);
+    // void        removeFromChannels(Channel*);
     void        buffer(std::string_view);
     void        incrementChannelCount();
     void        decrementChannelCount();

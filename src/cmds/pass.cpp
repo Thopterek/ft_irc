@@ -1,6 +1,7 @@
 #include "../client/User.hpp"
+#include "../client/Parser.hpp"
 
-void    pass(Client& client, int fd, std::vector<std::string> param)
+void    pass(Client& client, int fd, const std::vector<std::string> &param)
 {
     User&       user { client[fd] };
 
