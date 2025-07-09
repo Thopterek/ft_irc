@@ -23,17 +23,6 @@ void Channel::addMember(unsigned int clientId, Server &server)
 
 	_members[clientId] = true;
 	send_msg(server, clientId, "JOIN " + name + "\r\n");
-
-	in add addMember
-	just setting perminssion
-	_members true
-	_invites true i mean why not 
-	_kicked false ignore?
-	_operators[clientId] = false;
-	std::map<unsigned int, bool> _members;
-	std::map<unsigned int, bool> _kicked;
-	std::map<unsigned int, bool> _operators;
-	std::map<unsigned int, bool> _invites;
 }
 
 std::string Channel::removeMember(unsigned int clientId, Server &server)
@@ -79,9 +68,19 @@ bool Channel::isOperator(unsigned int clientId)
 	return _operators[clientId];
 }
 
+bool Channel::isMember(unsigned int clientId)
+{
+	return _members[clientId];
+}
+
 std::map<unsigned int, bool> & Channel::getMembers()
 {
 	return _members;
+}
+
+bool isKicked(unsigned int client)
+{
+	return _kicked[client];
 }
 
 std::string Channel::getInfo()
@@ -193,8 +192,8 @@ void Server::kick(User* user, const std::string& channelName) {
 
 
 
-
-
+//if (channel->password != "" && (parts.size() < 3 || parts[2] != channel->password)
+//		if (channelName[0] != '#')
 
 udpate 
 
@@ -267,4 +266,67 @@ void Channel::send_msg(std::string msg, Server& server, Client* sender) {
         if (recipient)
             recipient->sendMessage(msg); // oder .respond()
     }
+}
+
+
+
+
+std::string Channel::removeMember(unsigned int clientId, Server &server)
+{
+    if (!_members.count(clientId) || !_members[clientId])
+        return "User not in channel.";
+
+    _members[clientId] = false;
+
+    // Optional: channelId im User zurücksetzen, wenn du das trackst
+    Client* client = server.getClientById(clientId);
+    if (client) {
+        client->channelId = std::nullopt;  // falls std::optional genutzt
+    }
+
+    return "";
+}
+
+std::string Channel::inviteMember(unsigned int clientId, Server &server)
+{
+    if (_members.count(clientId) && _members[clientId])
+        return "Client is already a member.";
+    if (_invites.count(clientId) && _invites[clientId])
+        return "Client is already invited.";
+
+    _invites[clientId] = true;
+    _kicked[clientId] = false;
+    return "";
+}
+
+void Channel::broadcast(const std::string& msg, Server& server, Client* exclude) {
+	for (std::map<unsigned int, bool>::iterator it = _members.begin(); it != _members.end(); ++it) {
+		if (!it->second)
+			continue;
+
+		Client* target = server.getClientById(it->first);
+		if (!target || target == exclude)
+			continue;
+
+		target->sendMessage(msg);
+	}
+}
+
+std::string Channel::getPassword()
+{
+	return password;
+}
+void Channel::setPassword(std::string newPassword)
+{
+	password = newPassword;
+}
+
+
+void Channel::setTopic(std::string newTopic)
+{
+	topic = newTopic;
+}
+std::string Channel::getTopic()
+{
+	return topic;
 }

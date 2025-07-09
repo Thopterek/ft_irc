@@ -2,6 +2,7 @@
 #define	CHANNEL_HPP
 
 #include "Client.hpp"
+#include <map>
 
 class Server;
 
@@ -14,7 +15,12 @@ class Channel
 		std::map<unsigned int, bool> _invites;
 
 	public:
+		Channel() = delete;
 		Channel(std::string name, unsigned int id);
+		Channel(const Channel &other) = default;
+		Channel(Channel &&other) = default;
+		Channel & operator=(const Channel &other) = default;
+		~Channel() = default;
 
 		unsigned int id;
 
@@ -38,10 +44,19 @@ class Channel
 		void addOperator(unsigned int clientId);
 		void removeOperator(unsigned int clientId);
 		bool isOperator(unsigned int clientId);
+		bool isMember(unsigned int clientId);
+		std::string getPassword();
+		void setPassword(std::string newPassword);
+		void setTopic(std::string newTopic);
+		std::string getTopic();
+		void setLimit(int newLimit);
+		int getLimit() const;
+
+
 
 		std::string getInfoString();
 
-		bool isKicked(unsigned int client) { return _kicked[client]; }
+		bool isKicked(unsigned int client);
 };
 
 #endif

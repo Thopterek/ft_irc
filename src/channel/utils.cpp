@@ -230,3 +230,25 @@ void Commands::HandleMODE(const std::vector<std::string> &parts, Client & client
 		return client.sendCodeResponse(501, "Unknown MODE flag", mode);
 }
 
+
+User* Server::getClientByNick(const std::string& nickname)
+{
+    for (std::map<int, User>::iterator it = users.begin(); it != users.end(); ++it) {
+        if (it->second.nickname == nickname)
+            return &it->second;
+    }
+    return NULL;
+}
+
+
+void Channel::setLimit(int newLimit)
+{
+	if (newLimit < 0)
+		return ;
+	limit = newLimit;
+}
+
+int Channel::getLimit() const
+{
+	return limit;
+}
