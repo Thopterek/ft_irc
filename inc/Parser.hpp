@@ -6,7 +6,7 @@
 /*   By: ndziadzi <ndziadzi@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/24 17:14:45 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/07/09 11:09:08 by ndziadzi         ###   ########.fr       */
+/*   Updated: 2025/07/09 14:58:48 by ndziadzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,9 +34,21 @@ class   Parser
     static  void    dispatchCommand(Client&, int fd, const std::vector<std::string>&);
 };
 
+/*
+  basic commands
+*/
 void    pass(Client&, int, const std::vector<std::string>&);
 void    nick(Client&, int, const std::vector<std::string>&);
 void    user(Client&, int, const std::vector<std::string>&);
 void    privmsg(Client&, int, const std::vector<std::string>&);
+/*
+  channel side commands
+*/
+void invite(Client& client, int fd, const std::vector<std::string> &param);
+void join(Client& client, int fd, const std::vector<std::string> &param);
+void kick(Client& client, int fd, const std::vector<std::string> &param);
+void mode(Client& client, int fd, const std::vector<std::string> &param);
+void part(Client& client, int fd, const std::vector<std::string> &param);
+void quit(Client& client, int fd, const std::vector<std::string> &param);
 
 #endif

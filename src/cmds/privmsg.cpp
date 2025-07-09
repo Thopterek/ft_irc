@@ -1,5 +1,5 @@
-#include "../client/User.hpp"
-#include "../client/Parser.hpp"
+#include "../../inc/User.hpp"
+#include "../../inc/Parser.hpp"
 
 static bool isUser(const std::string& target)
 {

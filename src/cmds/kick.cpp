@@ -1,7 +1,8 @@
-#include "../client/User.hpp"
-#include "../channel/Channel.hpp"
+#include "../../inc/User.hpp"
+#include "../../inc/Channel.hpp"
 
-void kick(Client& client, int fd, std::vector<std::string> param)
+
+void kick(Client& client, int fd, const std::vector<std::string> &param)
 {
 	User& user = client[fd];
 
@@ -11,25 +12,29 @@ void kick(Client& client, int fd, std::vector<std::string> param)
 	const std::string& channelName = param[0];
 	const std::string& targetNick = param[1];
 
-	Channel* channel = server.getChannelByName(channelName);
+	Channel* channel = client.getChannelByName(channelName);
 	if (!channel)
 		return user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);
 
-	if (!channel->isOperator(user.id))
+	if (!channel->isOperator(user.getFd()))
 		return user.handleErrors(Errors::ERR_CHANOPRIVSNEEDED, channelName);
-
-	User* target = server.getClientByNick(targetNick);
-	if (!target)
+	auto it = client.getUsers().begin();
+	while (it != client.getUsers().end()) {
+		if (targetNick == it->second->getNickName())
+			break;
+		++it;
+	}
+	if (it == client.getUsers().end())
 		return user.handleErrors(Errors::ERR_NOSUCHNICK, targetNick);
 
-	if (!channel->isMember(target->id))
+	if (!channel->isMember(it->first))
 		return user.handleErrors(Errors::ERR_USERNOTINCHANNEL, targetNick);
 
 	std::string msg = ":" + user.getSource() + " KICK " + channelName + " " + targetNick + " :Kicked\r\n";
-	channel->broadcast(msg, server, nullptr);
-	target->respond(msg);
+	channel->broadcast(msg, user);
+	// target->respond(msg);
 
-	channel->kick(target->id, server);
+	channel->kick(it->first);
 	if (channel->getMembers().empty())
-		server.deleteChannel(channelName);
+		client.deleteChannel(channelName);
 }

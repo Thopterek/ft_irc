@@ -1,5 +1,6 @@
-#include "Client.hpp"
-#include "User.hpp"
+#include "../../inc/Client.hpp"
+#include "../../inc/User.hpp"
+#include "../../inc/Channel.hpp"
 
 User&   Client::operator[](int socketFd)
 {
@@ -54,4 +55,35 @@ int Client::ircToupper(int c)
         return ('~');
     else
         return (std::toupper(c));
+}
+
+/*
+    from this point on channel handling functions
+*/
+Channel* Client::getChannelByName(const std::string& name) {
+	std::unordered_map<std::string, Channel*>::iterator it = channels.find(name);
+	if (it != channels.end())
+		return it->second;
+	return NULL;
+}
+
+// Channel& Client::createChannel(const std::string& name, unsigned int clientId) {
+
+// 	channels.emplace(Channel(name, clientId));
+// 	return channels[name];
+// }
+
+Channel* Client::createChannel(const std::string& name, unsigned int clientId) {
+	auto chan = std::make_unique<Channel>(name, clientId);
+	Channel* chan_ptr = chan.get(); // Rückgabe als roher Pointer für Verwendung
+	channels[name] = chan_ptr; // Ownership geht in map über
+	return chan_ptr;
+}
+
+void Client::deleteChannel(const std::string& name) {
+    channels.erase(name); // unique_ptr sorgt automatisch für delete
+}
+
+std::unordered_map<std::string, Channel*>& Client::getAllChannels() {
+	return channels;
 }

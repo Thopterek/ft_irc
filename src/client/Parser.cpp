@@ -1,16 +1,4 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Parser.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: ndziadzi <ndziadzi@student.42heilbronn.    +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/06/24 17:52:15 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/07/09 13:18:22 by ndziadzi         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
-#include "Parser.hpp"
+#include "../../inc/Parser.hpp"
 
 std::unordered_map<std::string, Parser::Cmd> Parser::m_cmds;
 
@@ -20,13 +8,16 @@ Parser::Parser()
     m_cmds.emplace("NICK", nick);
     m_cmds.emplace("USER", user);
     m_cmds.emplace("PRIVMSG", privmsg);
-    // m_cmds.emplace("INVITE", handleInvite);
+    /*
+        channel side of things
+    */
+    m_cmds.emplace("INVITE", invite);
+    m_cmds.emplace("JOIN", join);
+    m_cmds.emplace("MODE", mode);
+    m_cmds.emplace("KICK", kick);
+    m_cmds.emplace("QUIT", quit);
+    m_cmds.emplace("PART", part);
     // m_cmds.emplace("CAP", handleCap);
-    // m_cmds.emplace("JOIN", handleJoin);
-    // m_cmds.emplace("PART", handlePart);
-    // m_cmds.emplace("KICK", handleKick);
-    // m_cmds.emplace("QUIT", handleQuit);
-    // m_cmds.emplace("MODE", handleMode);
     // m_cmds.emplace("TOPIC", handleTopic);
     // m_cmds.emplace("WHO", handleWho);
     // m_cmds.emplace("PING", handlePing);

@@ -25,8 +25,8 @@
 	includes of our headers
 	for different functionality
 */
-#include "../src/client/Client.hpp"
-#include "../src/client/Parser.hpp"
+#include "Client.hpp"
+#include "Parser.hpp"
 #include "Channel.hpp"
 
 /*

@@ -1,10 +1,7 @@
 #ifndef	CHANNEL_HPP
 #define	CHANNEL_HPP
 
-#include "Client.hpp"
-#include <map>
-
-class Server;
+#include "User.hpp"
 
 class Channel
 {
@@ -31,14 +28,14 @@ class Channel
 		bool anyoneCanChangeTopic = true;
 		int limit = 0;
 
-		void send_msg(std::string msg, Server &server, Client * client = nullptr);
+		void broadcast(const std::string &msg, User &user);
 
-		void addMember(unsigned int client, Server &server);
-		std::string removeMember(unsigned int clientId, Server &server);
-		std::string inviteMember(unsigned int clientId, Server &server);
+		void addMember(unsigned int client);
+		void removeMember(unsigned int clientId);
+		std::string inviteMember(unsigned int clientId);
 		std::map<unsigned int, bool> & getMembers();
 	
-		void kick(unsigned int clientId, Server &server);
+		void kick(unsigned int clientId);
 		void unkick(unsigned int clientId);
 
 		void addOperator(unsigned int clientId);

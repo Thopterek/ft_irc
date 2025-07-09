@@ -1,9 +1,8 @@
-#include "../inc/Channel.hpp"
-#include <sys/socket.h> 
+#include "../../inc/Channel.hpp"
 
 Channel::Channel(std::string name, unsigned int id) : id(id), name(name) {};
 
-void Channel::addMember(unsigned int clientId, Server &server)
+void Channel::addMember(unsigned int clientId)
 {
 	if (inviteOnly && !_invites[clientId])
 		return;
@@ -15,37 +14,38 @@ void Channel::addMember(unsigned int clientId, Server &server)
 		if (member.second)
 			channelSize++;
 	}
-	if (limit != 0 && channelSize >= limit)
+	if (limit != 0 && channelSize >= static_cast<size_t>(limit))
 		return;
 	if (_members[clientId])
 		return; // Already a member
-	client->channelId = this->id;
+	// client->channelId = this->id;
 
 	_members[clientId] = true;
-	send_msg(server, clientId, "JOIN " + name + "\r\n");
+	// send_msg(server, clientId, "JOIN " + name + "\r\n");
 }
 
-std::string Channel::removeMember(unsigned int clientId, Server &server)
+void	Channel::removeMember(unsigned int clientId)
 {
 	_members[clientId] = false;
 }
 
-std::string Channel::inviteMember(unsigned int clientId, Server &server)
+std::string Channel::inviteMember(unsigned int clientId)
 {
 	if (!clientId)
 		return "Invalid client ID.";
-	if (_members)
+	if (_members[clientId])
 		return "Client is already a member.";
 	if (_invites[clientId])
 		return "Client is already invited.";
 	_invites[clientId] = true;
 	_kicked[clientId] = false;
+	return "You got invited";
 }
 
 
-void Channel::kick(unsigned int clientId, Server &server)
+void Channel::kick(unsigned int clientId)
 {
-	removeMember(clientId, server);
+	removeMember(clientId);
 	_kicked[clientId] = true;
 	_invites[clientId] = false;
 	_operators[clientId] = false;
@@ -78,237 +78,215 @@ std::map<unsigned int, bool> & Channel::getMembers()
 	return _members;
 }
 
-bool isKicked(unsigned int client)
+bool Channel::isKicked(unsigned int client)
 {
 	return _kicked[client];
 }
 
-std::string Channel::getInfo()
-{
-	std::string info = "Channel Name: " + name + "\n";
-	info += "Channel ID: " + std::to_string(id) + "\n";
-	info += "Members: ";
-	for (const auto &member : _members)
-	{
-		if (member.second)
-			info += std::to_string(member.first) + " ";
-	}
-	info += "\nOperators: ";
-	for (const auto &op : _operators)
-	{
-		if (op.second)
-			info += std::to_string(op.first) + " ";
-	}
-	return info;
-}
+// std::string Channel::getInfo()
+// {
+// 	std::string info = "Channel Name: " + name + "\n";
+// 	info += "Channel ID: " + std::to_string(id) + "\n";
+// 	info += "Members: ";
+// 	for (const auto &member : _members)
+// 	{
+// 		if (member.second)
+// 			info += std::to_string(member.first) + " ";
+// 	}
+// 	info += "\nOperators: ";
+// 	for (const auto &op : _operators)
+// 	{
+// 		if (op.second)
+// 			info += std::to_string(op.first) + " ";
+// 	}
+// 	return info;
+// }
 
 
-more server param_type
+// more server param_type
 
-for the channal check
-vektor or uniq pointer usaage
+// for the channal check
+// vektor or uniq pointer usaage
 
 
-class Server {
-	private:
-		std::unordered_map<std::string, std::unique_ptr<Channel>> m_channels;
+// class Server {
+// 	private:
+// 		std::unordered_map<std::string, std::unique_ptr<Channel>> m_channels;
 	
-	public:
-		Channel* createChannel(const std::string& name);
-		void deleteChannel(const std::string& name);
-	};
+// 	public:
+// 		Channel* createChannel(const std::string& name);
+// 		void deleteChannel(const std::string& name);
+// 	};
 
 
 
-	Channel* Server::createChannel(const std::string& name) {
-		auto chan = std::make_unique<Channel>(name, m_channels.size());
-		Channel* chan_ptr = chan.get(); // Rückgabe als roher Pointer für Verwendung
-		m_channels[name] = std::move(chan); // Ownership geht in map über
-		return chan_ptr;
-	}
-	
-	void Server::deleteChannel(const std::string& name) {
-		m_channels.erase(name); // unique_ptr sorgt automatisch für delete
-	}
+// 	Channel* Server::createChannel(const std::string& name) {
+// 		auto chan = std::make_unique<Channel>(name, m_channels.size());
+// 		Channel* chan_ptr = chan.get(); // Rückgabe als roher Pointer für Verwendung
+// 		m_channels[name] = std::move(chan); // Ownership geht in map über
+// 		return chan_ptr;
+// 	}
 
 
-	#include <vector>
+// 	#include <vector>
 
-class Server {
-private:
-    std::vector<Channel> _channels;
+// class Server {
+// private:
+//     std::vector<Channel> _channels;
 
-public:
-    Channel& createChannel(const std::string& name);
-    void deleteChannelByName(const std::string& name); // Achtung: langsamer
-};
+// public:
+//     Channel& createChannel(const std::string& name);
+//     void deleteChannelByName(const std::string& name); // Achtung: langsamer
+// };
 
-Channel& Server::createChannel(const std::string& name) {
-    _channels.emplace_back(name, _channels.size());
-    return _channels.back(); // Gib Referenz auf neu erstellten Channel zurück
-}
+// Channel& Server::createChannel(const std::string& name) {
+//     _channels.emplace_back(name, _channels.size());
+//     return _channels.back(); // Gib Referenz auf neu erstellten Channel zurück
+// }
 
-void Server::deleteChannelByName(const std::string& name) {
-    auto it = std::remove_if(_channels.begin(), _channels.end(),
-        [&name](const Channel& c) {
-            return c.getName() == name;
-        });
+// void Server::deleteChannelByName(const std::string& name) {
+//     auto it = std::remove_if(_channels.begin(), _channels.end(),
+//         [&name](const Channel& c) {
+//             return c.getName() == name;
+//         });
 
-    if (it != _channels.end()) {
-        _channels.erase(it, _channels.end());
-    }
-}
+//     if (it != _channels.end()) {
+//         _channels.erase(it, _channels.end());
+//     }
+// }
 
-void Channel::send_msg(std::string msg, Server &server, Client *client) {
-	for (const auto& member : _members) {
-		if (member.second && (!client || member.first != client->id)) {
-			send(member.first, msg, server);
-		}
-	}
-}
+// void Channel::send_msg(std::string msg, Server &server, Client *client) {
+// 	for (const auto& member : _members) {
+// 		if (member.second && (!client || member.first != client->id)) {
+// 			send(member.first, msg, server);
+// 		}
+// 	}
+// }
 
 
-void Server::part(User* user, const std::string& channelName) {
-    auto it = _channels.find(channelName);
-    if (it != _channels.end()) {
-        it->second->removeUser(user);
-    }
-}
+// void Server::part(User* user, const std::string& channelName) {
+//     auto it = _channels.find(channelName);
+//     if (it != _channels.end()) {
+//         it->second->removeUser(user);
+//     }
+// }
 
-void Server::quit(User* user) {
-    for (auto& [name, chan] : _channels) {
-        if (chan->hasUser(user)) {
-            chan->removeUser(user);
-        }
-    }
-}
+// void Server::quit(User* user) {
+//     for (auto& [name, chan] : _channels) {
+//         if (chan->hasUser(user)) {
+//             chan->removeUser(user);
+//         }
+//     }
+// }
 
-void Server::kick(User* user, const std::string& channelName) {
-    auto it = _channels.find(channelName);
-    if (it != _channels.end() && it->second->hasUser(user)) {
-        it->second->removeUser(user);
-    }
-}
+// void Server::kick(User* user, const std::string& channelName) {
+//     auto it = _channels.find(channelName);
+//     if (it != _channels.end() && it->second->hasUser(user)) {
+//         it->second->removeUser(user);
+//     }
+// }
 
 
 
 //if (channel->password != "" && (parts.size() < 3 || parts[2] != channel->password)
 //		if (channelName[0] != '#')
 
-udpate 
+// udpate 
 
 
-Parser::Parser()
-{
-	m_handler.emplace("INVITE", handleInvite)
-	m_handler.emplace("JOIN", handleJoin);
-	m_handler.emplace("MODE", handleMode);
-	m_handler.emplace("KICK", handleKick);
-    m_handler.emplace("QUIT", handleQuit);
-}
+// Parser::Parser()
+// {
+// 	m_handler.emplace("INVITE", handleInvite)
+// 	m_handler.emplace("JOIN", handleJoin);
+// 	m_handler.emplace("MODE", handleMode);
+// 	m_handler.emplace("KICK", handleKick);
+//     m_handler.emplace("QUIT", handleQuit);
+// }
 
 
-void    invite(Client& client, int fd, std::vector<std::string> param)
-{
-	User&       user { client[fd] };
-}
-void    join(Client& client, int fd, std::vector<std::string> param)
-{
-	User&       user { client[fd] };
-}
-void    mode(Client& client, int fd, std::vector<std::string> param)
-{
-	User&       user { client[fd] };
-}
-void    kick(Client& client, int fd, std::vector<std::string> param)
-{
-	User&       user { client[fd] };
-}
-void    quit(Client& client, int fd, std::vector<std::string> param)
-{
-	User&       user { client[fd] };
+// void    invite(Client& client, int fd, std::vector<std::string> param)
+// {
+// 	User&       user { client[fd] };
+// }
+// void    join(Client& client, int fd, std::vector<std::string> param)
+// {
+// 	User&       user { client[fd] };
+// }
+// void    mode(Client& client, int fd, std::vector<std::string> param)
+// {
+// 	User&       user { client[fd] };
+// }
+// void    kick(Client& client, int fd, std::vector<std::string> param)
+// {
+// 	User&       user { client[fd] };
+// }
+// void    quit(Client& client, int fd, std::vector<std::string> param)
+// {
+// 	User&       user { client[fd] };
 
-	const std::string&  error { user.errors.at(Errors::ERR_NONICKNAMEGIVEN) };
-	user.respond(user.buildMsg(Errors::ERR_NONICKNAMEGIVEN, "NICK", error));// this line imporatant
+// 	const std::string&  error { user.errors.at(Errors::ERR_NONICKNAMEGIVEN) };
+// 	user.respond(user.buildMsg(Errors::ERR_NONICKNAMEGIVEN, "NICK", error));// this line imporatant
 
-	//also found this version:
-	// user.handleErrors(Errors::ERR_REGISTERING, "PASS");
-	//const std::string&  error { user.errors.at(Errors::ERR_REGISTERING) };
-	//user.respond(user.buildMsg(Errors::ERR_REGISTERING, "PASS", error));
-	return ;
-}
+// 	//also found this version:
+// 	// user.handleErrors(Errors::ERR_REGISTERING, "PASS");
+// 	//const std::string&  error { user.errors.at(Errors::ERR_REGISTERING) };
+// 	//user.respond(user.buildMsg(Errors::ERR_REGISTERING, "PASS", error));
+// 	return ;
+// }
 
+/*
+	from this part we are taking fts
+*/
 
-
-
-
-
-Channel* getChannelByName(const std::string& name) {
-	std::map<std::string, Channel>::iterator it = channels.find(name);
-	if (it != channels.end())
-		return &it->second;
-	return NULL;
-}
-
-Channel& createChannel(const std::string& name, unsigned int clientId) {
-	channels[name] = Channel(name, clientId);
-	return channels[name];
-}
-
-std::map<std::string, Channel>& getAllChannels() {
-	return channels;
-}
-
-void Channel::send_msg(std::string msg, Server& server, Client* sender) {
-    for (std::map<unsigned int, bool>::iterator it = _members.begin(); it != _members.end(); ++it) {
-        if (sender && it->first == sender->getId()) continue;
-        Client* recipient = server.getClientById(it->first);
-        if (recipient)
-            recipient->sendMessage(msg); // oder .respond()
-    }
-}
+// void Channel::send_msg(std::string msg, Server& server, Client* sender) {
+//     for (std::map<unsigned int, bool>::iterator it = _members.begin(); it != _members.end(); ++it) {
+//         if (sender && it->first == sender->getId()) continue;
+//         Client* recipient = server.getClientById(it->first);
+//         if (recipient)
+//             recipient->sendMessage(msg); // oder .respond()
+//     }
+// }
 
 
 
 
-std::string Channel::removeMember(unsigned int clientId, Server &server)
-{
-    if (!_members.count(clientId) || !_members[clientId])
-        return "User not in channel.";
+// std::string Channel::removeMember(unsigned int clientId, Server &server)
+// {
+//     if (!_members.count(clientId) || !_members[clientId])
+//         return "User not in channel.";
 
-    _members[clientId] = false;
+//     _members[clientId] = false;
 
-    // Optional: channelId im User zurücksetzen, wenn du das trackst
-    Client* client = server.getClientById(clientId);
-    if (client) {
-        client->channelId = std::nullopt;  // falls std::optional genutzt
-    }
+//     // Optional: channelId im User zurücksetzen, wenn du das trackst
+//     Client* client = server.getClientById(clientId);
+//     if (client) {
+//         client->channelId = std::nullopt;  // falls std::optional genutzt
+//     }
 
-    return "";
-}
+//     return "";
+// }
 
-std::string Channel::inviteMember(unsigned int clientId, Server &server)
-{
-    if (_members.count(clientId) && _members[clientId])
-        return "Client is already a member.";
-    if (_invites.count(clientId) && _invites[clientId])
-        return "Client is already invited.";
+// std::string Channel::inviteMember(unsigned int clientId, Server &server)
+// {
+//     if (_members.count(clientId) && _members[clientId])
+//         return "Client is already a member.";
+//     if (_invites.count(clientId) && _invites[clientId])
+//         return "Client is already invited.";
 
-    _invites[clientId] = true;
-    _kicked[clientId] = false;
-    return "";
-}
+//     _invites[clientId] = true;
+//     _kicked[clientId] = false;
+//     return "";
+// }
 
-void Channel::broadcast(const std::string& msg, Server& server, Client* exclude) {
+void Channel::broadcast(const std::string& msg, User &user) {
+	std::string actual = msg + "\r\n";
 	for (std::map<unsigned int, bool>::iterator it = _members.begin(); it != _members.end(); ++it) {
 		if (!it->second)
 			continue;
-
-		Client* target = server.getClientById(it->first);
-		if (!target || target == exclude)
+		if (it->first == static_cast<unsigned int>(user.getFd()))
 			continue;
-
-		target->sendMessage(msg);
+		if (send(it->first, actual.c_str(), actual.size(), MSG_DONTWAIT) < 0)
+			std::cerr << "Error: send in broadcoast failed" << std::endl;
 	}
 }
 
@@ -329,4 +307,16 @@ void Channel::setTopic(std::string newTopic)
 std::string Channel::getTopic()
 {
 	return topic;
+}
+
+void Channel::setLimit(int newLimit)
+{
+	if (newLimit < 0)
+		return ;
+	limit = newLimit;
+}
+
+int Channel::getLimit() const
+{
+	return limit;
 }

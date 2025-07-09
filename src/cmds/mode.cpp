@@ -1,7 +1,8 @@
-#include "../client/User.hpp"
-#include "../channel/Channel.hpp"
+#include "../../inc/User.hpp"
+#include "../../inc/Channel.hpp"
 
-void mode(Client& client, int fd, std::vector<std::string> param)
+
+void mode(Client& client, int fd, const std::vector<std::string> &param)
 {
 	User& user = client[fd];
 
@@ -11,11 +12,11 @@ void mode(Client& client, int fd, std::vector<std::string> param)
 	const std::string& channelName = param[0];
 	const std::string& modes = param[1];
 
-	Channel* channel = server.getChannelByName(channelName);
+	Channel* channel = client.getChannelByName(channelName);
 	if (!channel)
 		return user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);
 
-	if (!channel->isOperator(user.id))
+	if (!channel->isOperator(user.getFd()))
 		return user.handleErrors(Errors::ERR_CHANOPRIVSNEEDED, channelName);
 
 	bool set = true;
@@ -26,8 +27,8 @@ void mode(Client& client, int fd, std::vector<std::string> param)
 		if (c == '-') { set = false; continue; }
 	
 		switch (c) {
-			case 'i': channel->setInviteOnly(set); break;
-			case 't': channel->setTopicProtection(set); break;
+			// case 'i': channel->setInviteOnly(set); break;
+			// case 't': channel->setTopicProtection(set); break;
 			case 'k':
 				if (set && param.size() > 2) channel->setPassword(param[2]);
 				else if (!set) channel->setPassword(""); // Passwort löschen
@@ -37,10 +38,10 @@ void mode(Client& client, int fd, std::vector<std::string> param)
 				else if (!set) channel->setLimit(0); // Limit deaktivieren
 				break;
 			default:
-				return user.handleErrors(Errors::ERR_UNKNOWNMODE, std::string(1, c));
+				return user.handleErrors(Errors::ERR_UNKNOWNMODE, "MODE"/*std::string(1, c)*/);
 		}
 	}
 
 	std::string msg = ":" + user.getSource() + " MODE " + channelName + " +" + modes + "\r\n";
-	channel->broadcast(msg, server, nullptr);
+	channel->broadcast(msg, user);
 }

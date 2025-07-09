@@ -1,7 +1,7 @@
-#include "../client/User.hpp"
-#include "../channel/Channel.hpp"
+#include "../../inc/User.hpp"
+#include "../../inc/Channel.hpp"
 
-void invite(Client& client, int fd, std::vector<std::string> param)
+void invite(Client& client, int fd, const std::vector<std::string> &param)
 {
 	User& user = client[fd];
 
@@ -11,27 +11,31 @@ void invite(Client& client, int fd, std::vector<std::string> param)
 	const std::string& targetNick = param[0];
 	const std::string& channelName = param[1];
 
-	User* target = server.getClientByNick(targetNick);
-	if (!target)
+	auto it = client.getUsers().begin();
+	while (it != client.getUsers().end()) {
+		if (targetNick == it->second->getNickName())
+			break;
+		++it;
+	}
+	if (it == client.getUsers().end())
 		return user.handleErrors(Errors::ERR_NOSUCHNICK, targetNick);
 
-	Channel* channel = server.getChannelByName(channelName);
+	Channel* channel = client.getChannelByName(channelName);
 	if (!channel)
 		return user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);
 
-	if (!channel->isMember(user.id))
+	if (!channel->isMember(user.getFd()))
 		return user.handleErrors(Errors::ERR_NOTONCHANNEL, channelName);
 
-	if (!channel->isOperator(user.id))
+	if (!channel->isOperator(user.getFd()))
 		return user.handleErrors(Errors::ERR_CHANOPRIVSNEEDED, channelName);
 
-	std::string inviteErr = channel->inviteMember(target->id, server);
+	std::string inviteErr = channel->inviteMember(it->first);
 	if (!inviteErr.empty()) {
-		user.respond(user.buildMsg(Errors::ERR_UNKNOWNERROR, "INVITE", inviteErr));
+		user.handleErrors(Errors::ERR_UNKNOWNERROR, "INVITE");
 		return;
 	}
 
 	std::string msg = ":" + user.getSource() + " INVITE " + targetNick + " :" + channelName + "\r\n";
-	target->respond(msg);
-	user.respond(msg);
+	it->second->respond(msg);
 }

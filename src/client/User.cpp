@@ -1,5 +1,4 @@
-#include "User.hpp"
-// #include "../../inc/Channel.hpp"
+#include "../../inc/User.hpp"
 
 const std::string        User::m_serverName = "ncs-irc.local";
 
@@ -21,6 +20,18 @@ User::User(int fd, std::string_view ip, std::string_view hostName, std::string_v
     m_errors.emplace(Errors::ERR_TOOMANYTARGETS, ": Too many targets");
     m_errors.emplace(Errors::ERR_NORECIPIENT, ": You must provide a target for your message");
     m_errors.emplace(Errors::ERR_NOTEXTTOSEND, ": Message must not be empty");
+    m_errors.emplace(Errors::ERR_UNKNOWNMODE, ": Mode unknown");
+    m_errors.emplace(Errors::ERR_NOSUCHCHANNEL, ": NO SUCH CHANNEL");
+    m_errors.emplace(Errors::ERR_NOTONCHANNEL, ": NOT ON CHANNEL");
+    m_errors.emplace(Errors::ERR_CHANOPRIVSNEEDED, ": CHANN PRIVS SOMETHING");
+    // newly added
+    m_errors.emplace(Errors::ERR_BADCHANNELKEY, ": Message AAAAAAAAA not be empty");
+    m_errors.emplace(Errors::ERR_BANNEDFROMCHAN, ": Mode AAAAAA");
+    m_errors.emplace(Errors::ERR_BADCHANMASK, ": NO SUCH CHANNEL");
+    m_errors.emplace(Errors::ERR_CHANNELISFULL, ": NOT ON CHANNEL");
+    m_errors.emplace(Errors::ERR_NOTOPLEVEL, ": CHANN PRIVS SOMETHING");
+    m_errors.emplace(Errors::ERR_USERONCHANNEL, ": AAAA");
+    m_errors.emplace(Errors::ERR_USERNOTINCHANNEL, ": AAA MORE SCREAMING A");
 }
 
 void    User::setNickName(std::string_view nickName)

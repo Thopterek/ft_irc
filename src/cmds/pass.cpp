@@ -1,5 +1,5 @@
-#include "../client/User.hpp"
-#include "../client/Parser.hpp"
+#include "../../inc/User.hpp"
+#include "../../inc/Parser.hpp"
 
 void    pass(Client& client, int fd, const std::vector<std::string> &param)
 {

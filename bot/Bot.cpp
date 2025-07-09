@@ -282,12 +282,12 @@ int	Bot::sendInitial() {
 	/*
 		To add after the channels are done
 	*/
-	// std::string join = "JOIN #" + bot_name + "\r\n";
-	// check = send(bot_fd, join.c_str(), join.size(), MSG_DONTWAIT);
-	// if (check == -1) {
-	// 	std::cerr << "Error: sending user failed" << std::endl;
-	// 	return (1);
-	// }
+	std::string join = "JOIN #" + bot_name + "\r\n";
+	check = send(bot_fd, join.c_str(), join.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending user failed" << std::endl;
+		return (1);
+	}
 	return (0);
 }
 
