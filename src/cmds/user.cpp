@@ -12,15 +12,11 @@ void    user(Client& client, int fd, std::vector<std::string> param)
     if (param.size() != 4 || param.front().empty())
     {
         user.handleErrors(Errors::ERR_NEEDMOREPARAMS, "USER");
-        //const std::string&  error { user.errors.at(Errors::ERR_NEEDMOREPARAMS) };
-        //user.respond(user.buildMsg(Errors::ERR_NEEDMOREPARAMS, "USER", error));
         return ;
     }
    if (!user.getUserName().empty())
     {
         user.handleErrors(Errors::ERR_ALREADYREGISTERED, "USER");
-        //const std::string&  error { user.errors.at(Errors::ERR_ALREADYREGISTERED) };
-        //user.respond(user.buildMsg(Errors::ERR_ALREADYREGISTERED, "USER", error));
         return ;
     }
     user.setUserName(param[0]);

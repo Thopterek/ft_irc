@@ -49,7 +49,7 @@ void    nick(Client& client, int fd, std::vector<std::string> param)
     if (ircCapitalize(user.getNickName()) == ircCapitalize(newNick))
         return ;
     for (auto member : getChannels())
-        member->broadcast(user.getSource() + " NICK :" + newNick);
+        member->broadcast(user.getSource() + " NICK :" + newNick, user);
     user.setOldNick(user.getNickName());
     user.setNickName(newNick);
 }

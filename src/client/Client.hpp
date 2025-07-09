@@ -13,7 +13,6 @@
 
 class User;
 
-//Todo: Write an ircCapitalize function.
 enum class Errors
 {
     ERR_NONE = 0,
@@ -36,8 +35,9 @@ enum class Errors
 
 class   Client
 {
-    int                             m_userCount {0};
+    int                             m_userCount {};
     std::unordered_map<int, User*>  m_users;
+    static int     ircToupper(int c);
   public:
     Client() = default;
     Client(const Client&) = delete;
@@ -46,10 +46,10 @@ class   Client
     User&   operator[](int);
 
     const std::unordered_map<int, User*>&   getUsers() const;
-    void    connect(int, std::string_view, std::string_view);
+    void    connect(int, std::string_view, 
+                    std::string_view, std::string_view);
     void    disconnect(int);
     static const std::string&   ircCapitalize(const std::string&);
-    static int     ircToupper(int c);
 };
 
 #endif

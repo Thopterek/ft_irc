@@ -53,7 +53,7 @@ void    privmsg(Client& client, int fd, const std::vector<std::string> params)
 
     if (user.getStatus != RegStatus::REGISTERED)
     {
-        handleError(Errors::ERR_NOTREGISTERED, "PRIVMSG");
+        user.handleError(Errors::ERR_NOTREGISTERED, "PRIVMSG");
         return ;
     }
     if (params.size() < 1 || params.at(0).empty())

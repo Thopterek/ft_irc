@@ -23,7 +23,8 @@ class   User
     int                 m_channelCount {0};
     RegStatus           m_status;
     const std::string   m_userIp, m_hostName, m_serverPwd;
-    std::string         m_nickName, m_oldNick, m_userName, m_realName, m_buffer; 
+    std::string         m_nickName, m_oldNick, m_userName, m_realName; 
+    mutable std::string m_buffer;
     static const std::string                m_serverName;
     std::map<const std::string, Channel*>   m_channels;
     std::map<ErrorValues, std::string>  m_errors;
@@ -48,7 +49,7 @@ class   User
     std::string         getUserIp() const;
     std::string         getHostName() const;
     const std::string&  getServerPwd() const;
-    std::string         getBuffer() const;
+    std::string&        getBuffer() const;
     int                 getFd() const;
     RegStatus           getStatus() const;
     const std::map<const std::string, Channel*>&  

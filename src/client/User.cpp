@@ -87,7 +87,7 @@ std::string User::getHostName() const
     return (m_hostName);
 }
 
-std::string User::getBuffer() const
+std::string& User::getBuffer() const
 {
     return (m_buffer);
 }
