@@ -14,21 +14,21 @@
 
 Parser::Parser()
 {
-    // m_handler.emplace("NICK", handleNick);
-    // m_handler.emplace("USER", handleUser);
-    // m_handler.emplace("PASS", handlePwd);
-    // m_handler.emplace("INVITE", handleInvite);
-    // m_handler.emplace("CAP", handleCap);
-    // m_handler.emplace("PRIVMSG", handlePrivMsg);
-    // m_handler.emplace("JOIN", handleJoin);
-    // m_handler.emplace("PART", handlePart);
-    // m_handler.emplace("KICK", handleKick);
-    // m_handler.emplace("QUIT", handleQuit);
-    // m_handler.emplace("MODE", handleMode);
-    // m_handler.emplace("TOPIC", handleTopic);
-    // m_handler.emplace("WHO", handleWho);
-    // m_handler.emplace("PING", handlePing);
-    // m_handler.emplace("PONG", handlePong);
+    m_cmds.emplace("PASS", pass);
+    m_cmds.emplace("NICK", nick);
+    m_cmds.emplace("USER", user);
+    m_cmds.emplace("PRIVMSG", privMsg);
+    // m_cmds.emplace("INVITE", handleInvite);
+    // m_cmds.emplace("CAP", handleCap);
+    // m_cmds.emplace("JOIN", handleJoin);
+    // m_cmds.emplace("PART", handlePart);
+    // m_cmds.emplace("KICK", handleKick);
+    // m_cmds.emplace("QUIT", handleQuit);
+    // m_cmds.emplace("MODE", handleMode);
+    // m_cmds.emplace("TOPIC", handleTopic);
+    // m_cmds.emplace("WHO", handleWho);
+    // m_cmds.emplace("PING", handlePing);
+    // m_cmds.emplace("PONG", handlePong);
 }
 
 std::vector<std::string>    Parser::tokenize(std::string_view msg)
@@ -57,26 +57,23 @@ std::vector<std::string>    Parser::tokenize(std::string_view msg)
 }
 
 void    
-Parser::dispatchCommand(User& user, const std::vector<std::string>& argVec)
+Parser::dispatchCommand(User& user, const std::vector<std::string>& tokens)
 {
-    if (argVec.empty())
+    if (tokens.empty())
         return ;
 
-    std::string                 cmd{argVec.front()};
+    std::string                 cmd{tokens.front()};
     std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
-    std::vector<std::string>    params{argVec.begin() + 1, argVec.end()};
+    std::vector<std::string>    params{tokens.begin() + 1, tokens.end()};
 
     try
     {
-        // m_handler.at(cmd)(user, params);
+        m_cmds.at(cmd)(user, params);
         std::cout << "DEBUG: it went into handler" << std::endl;
     }
     catch (const std::out_of_range&)
     {
-        std::string msg;
-        // msg = user.buildMsg(ERR_UNKNOWNCOMMAND, cmd, ": Unknown Command");
-        std::cout << "DEBUG: ERR_UNKOWNCOMMAND is to be defined" << std::endl;
-        user.respond(msg);
+        user.handleError(Error::ERR_UNKNOWNCOMMAND, cmd);
     }
 }
 

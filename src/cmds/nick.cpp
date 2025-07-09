@@ -1,4 +1,4 @@
-#include "Client.hpp"
+#include "../client/User.hpp"
 
 static ErrorValues validate(Client& client, int fd, std::string_view nick)
 {
@@ -10,8 +10,9 @@ static ErrorValues validate(Client& client, int fd, std::string_view nick)
         if (c == ' ' || c == ',' || c == '*' || c == '?' || c == '!' || c == '@')
             return (Errors::ERR_ERRONEUSNICKNAME);
     const std::string capitalized { client.ircCapitalize(nick) };
-    for (auto user : client.m_clients)
-        if (user->m_fd != client[fd].m_fd)
+    const std::unordered_map<int, User*> users { client.getUsers() };
+    for (auto user : users)
+        if (user->getFd() != client[fd].getFd())
             if (capitalized == ircCapitalize(user->getNickName()))
                 return (Errors::ERR_NICKNAMEINUSE);
     return (Errors::ERR_NONE);
@@ -21,10 +22,14 @@ void    nick(Client& client, int fd, std::vector<std::string> param)
 {
     User&       user { client[fd] };
 
+    if (user.getStatus == RegStatus::CONNECTED)
+    {
+        user.respond("ERROR :You must send PASS command before registering.");
+        return ;
+    }
     if (param.empty())
     {
-        const std::string&  error { user.errors.at(Errors::ERR_NONICKNAMEGIVEN) };
-        user.respond(user.buildMsg(Errors::ERR_NONICKNAMEGIVEN, "NICK", error));
+        user.handleErrors(Errors::ERR_NONICKNAMEGIVEN, "NICK");
         return ;
     }
 
@@ -39,13 +44,12 @@ void    nick(Client& client, int fd, std::vector<std::string> param)
     if (user.getNickName().empty())
     {
         user.setNickName(newNick);
-        user.setStatus(RegStatus::REGISTERING);
         return ;
     }
     if (ircCapitalize(user.getNickName()) == ircCapitalize(newNick))
         return ;
     for (auto member : getChannels())
-        member->broadcast(user.getSource() + " NICK :" + newNick);
+        member->broadcast(user.getSource() + " NICK :" + newNick, user);
     user.setOldNick(user.getNickName());
     user.setNickName(newNick);
 }

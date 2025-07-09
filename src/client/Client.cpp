@@ -1,33 +1,56 @@
 #include "Client.hpp"
 
-Client::Client() : m_users() {}
-
-Client::Client(int fd, std::string_view ip, std::string_view hostName)
-{
-    connect(fd, ip, hostName);
-}
-
 User&   Client::operator[](int socketFd)
 {
     return (*(m_users.at(socketFd)));
 }
 
-void    
-    Client::connect(int fd, std::string_view ip, std::string_view hostName)
+const std::unordered_map<int, User*>&   Client::getUsers() const
 {
-    User    *user = new User(fd, ip, hostName);
+    return (m_users);
+}
+
+void    Client::connect(int fd, std::string_view ip,
+            std::string_view hostName, std::string_view serverPwd)
+{
+    User    *user = new User(fd, ip, hostName, serverPwd);
     m_users.emplace(fd, user);
     ++m_userCount;
     std::cout << "Client with fd: " << fd << " added to client pool" << std::endl;
 }
 
-void    Client::disconnect(int socketFd)
+void    Client::disconnect(int fd)
 {
-    auto    it = m_users.find(socketFd);
+    auto    it = m_users.find(fd);
     if (it == m_users.end())
         return ;
     delete it->second;
     m_users.erase(it);
     --m_userCount;
     std::cout << "Client with fd: " << socketFd << " removed from the pool" << std::endl;
+}
+
+const std::string  Client::ircCapitalize(const std::string& str)
+{
+    std::string capitalize;
+    capitalize.reserve(str.size());
+
+    for (auto c : str)
+        capitalize += static_cast<char>(ircToupper(c));
+    return (capitalize);
+}
+
+// IRC case-insensitive mapping
+int Client::ircToupper(int c)
+{
+    if (c == '{')
+        return ('[');
+    else if (c == '}')
+        return (']');
+    else if (c == '|')
+        return ('\\');
+    else if (c == '^')
+        return ('~');
+    else
+        return (std::toupper(c));
 }
