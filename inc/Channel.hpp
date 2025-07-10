@@ -53,8 +53,6 @@ class Channel
 		void setLimit(int newLimit);
 		int getLimit() const;
 
-
-
 		std::string getInfoString();
 
 		bool isKicked(unsigned int client);

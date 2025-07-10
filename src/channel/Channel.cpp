@@ -33,9 +33,9 @@ std::string Channel::inviteMember(unsigned int clientId)
 {
 	if (!clientId)
 		return "Invalid client ID.";
-	if (_members[clientId])
+	if (isMember(clientId))
 		return "Client is already a member.";
-	if (_invites[clientId])
+	if (isInvited(clientId))
 		return "Client is already invited.";
 	_invites[clientId] = true;
 	_kicked[clientId] = false;
@@ -63,6 +63,7 @@ void Channel::removeOperator(unsigned int clientId)
 {
 	_operators[clientId] = false;
 }
+
 bool Channel::isOperator(unsigned int clientId)
 {
 	auto it = _operators.find(clientId);
