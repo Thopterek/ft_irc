@@ -167,6 +167,8 @@
 
 void join(Client& client, int fd, const std::vector<std::string> &param)
 {
+	for (auto it = client.getAllChannels().begin(); it != client.getAllChannels().end(); ++it)
+		std::cout << "THERE WAS THIS MANY CHANNELS" << std::endl;
 	std::cout << "\033[33m\033[1m" << "Command: JOIN started" << "\033[0m" << std::endl;
 	User& user = client[fd];
 

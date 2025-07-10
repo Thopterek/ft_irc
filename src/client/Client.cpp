@@ -63,7 +63,7 @@ int Client::ircToupper(int c)
 Channel* Client::getChannelByName(const std::string& name) {
 	auto it = channels.find(name);
 	if (it != channels.end())
-		return it->second;
+		return it->second.get();
 	return NULL;
 }
 
@@ -76,7 +76,7 @@ Channel* Client::getChannelByName(const std::string& name) {
 Channel* Client::createChannel(const std::string& name, unsigned int clientId) {
 	auto chan = std::make_unique<Channel>(name, clientId);
 	Channel* chan_ptr = chan.get(); // Rückgabe als roher Pointer für Verwendung
-	channels[name] = chan_ptr; // Ownership geht in map über
+	channels[name] = std::move(chan); // Ownership geht in map über
 	return chan_ptr;
 }
 
@@ -84,6 +84,6 @@ void Client::deleteChannel(const std::string& name) {
     channels.erase(name); // unique_ptr sorgt automatisch für delete
 }
 
-std::unordered_map<std::string, Channel*>& Client::getAllChannels() {
+std::unordered_map<std::string, std::unique_ptr<Channel>>& Client::getAllChannels() {
 	return channels;
 }

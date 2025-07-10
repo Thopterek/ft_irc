@@ -12,7 +12,7 @@ void quit(Client& client, int fd, const std::vector<std::string> &param)
 
 	for (auto it = client.getAllChannels().begin(); it != client.getAllChannels().end();)
 	{
-		Channel* chan = it->second;
+		Channel* chan = it->second.get();
 		if (chan->isMember(user.getFd()))
 		{
 			chan->broadcast(msg, user);

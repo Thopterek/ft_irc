@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
+#include <utility>
 
 class Channel;
 
@@ -64,7 +65,7 @@ class   Client
       channel handling unorderd map
       keeping track of all of them
     */
-    std::unordered_map<std::string, Channel*> channels;
+    std::unordered_map<std::string, std::unique_ptr<Channel>> channels;
   public:
     Client() = default;
     Client(const Client&) = delete;
@@ -83,7 +84,7 @@ class   Client
     Channel* getChannelByName(const std::string& name);
     Channel* createChannel(const std::string& name, unsigned int clientId);
     void deleteChannel(const std::string& name);
-    std::unordered_map<std::string, Channel*>& getAllChannels();
+    std::unordered_map<std::string, std::unique_ptr<Channel>>& getAllChannels();
 };
 
 #endif
