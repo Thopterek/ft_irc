@@ -371,8 +371,12 @@ Bot::iter	Bot::recvServer(iter it) {
 		if (buffer.size() > 7) {
 			if (buffer.substr(buffer.size() - 7) == ":info\r\n")
 				sendInfo();
-			else if (buffer == "DCC GET " + bot_name + " " + file.first)
+		}
+		std::string tmp = ":DCC GET " + bot_name + " " + file.first + "\r\n"; 
+		if (buffer.size() > tmp.size()) {
+			if (buffer.substr(buffer.size() - tmp.size()) == tmp)
 				sendDCC();
+
 		}
 	}
 	buffer.clear();
@@ -441,7 +445,7 @@ void	Bot::sendBinary(int fd) {
 }
 
 void	Bot::sendInfo() {
-	std::string info = "PRIVMSG #" + bot_name + " " + file.first + " description: " + file.second + "\r\n";
+	std::string info = "PRIVMSG #" + bot_name + " file name:" + file.first + " and description: " + file.second + "\r\n";
 	int check = send(bot_fd, info.c_str(), info.size(), MSG_DONTWAIT);
 	if (check == -1) {
 		std::cerr << "Error: sending info failed" << std::endl;
@@ -450,7 +454,7 @@ void	Bot::sendInfo() {
 }
 
 void	Bot::sendDCC() {
-	std::string info = "DCC SEND #" + bot_name + " " + file.first + " port: " + std::to_string(connect_to_bot_fd);
+	std::string info = "PRIVMSG #" + bot_name + " DCC SEND " + file.first + " port: " + std::to_string(connect_to_bot_fd) + "\r\n";
 	int check = send(bot_fd, info.c_str(), info.size(), MSG_DONTWAIT);
 	if (check == -1) {
 		std::cerr << "Error: sending info failed" << std::endl;
