@@ -142,7 +142,7 @@ User::buildMsg(Errors errCode, const std::string& cmd, const std::string& errMsg
     std::string errorCode {std::to_string(static_cast<int>(errCode))};
     
     serverPrefix += (" " + errorCode + " " + getNickName());
-    return (serverPrefix + " " + cmd + " " + errMsg + " \r\n");
+    return (serverPrefix + " " + cmd + " :" + errMsg + "\r\n");
 }
 
 void    User::respond(std::string_view msg)
