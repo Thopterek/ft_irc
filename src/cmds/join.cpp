@@ -167,6 +167,7 @@
 
 void join(Client& client, int fd, const std::vector<std::string> &param)
 {
+	std::cout << "\033[33m\033[1m" << "Command: JOIN started" << "\033[0m" << std::endl;
 	User& user = client[fd];
 
 	if (user.getStatus() != RegStatus::REGISTERED)
@@ -177,22 +178,24 @@ void join(Client& client, int fd, const std::vector<std::string> &param)
 
 	std::string channelName = param[0];
 	std::string password = (param.size() > 1) ? param[1] : "";
-
+	std::cout << "we are before getting the channel pointer" << std::endl;
 	Channel* channel = client.getChannelByName(channelName);
-	if (!channel) {
+	if (channel == NULL) {
 		channel = client.createChannel(channelName, user.getFd());
 		channel->addOperator(user.getFd());
 	}
-
-	if (channel->isKicked(user.getFd()))
+	std::cout << "checking if he is kicked" << std::endl;
+	if (channel->isKicked(user.getFd())) {
+		std::cout << "are we going into user.handle" << std::endl;
 		return user.handleErrors(Errors::ERR_BANNEDFROMCHAN, channelName);
+	}
 
 	// if (channel->isInviteOnly() && !channel->isInvited(user.getFd()))
 	// 	return user.handleErrors(Errors::ERR_INVITEONLYCHAN, channelName);
-
+	std::cout << "next thing is checking the password" << std::endl;
 	if (!channel->getPassword().empty() && channel->getPassword() != password)
 		return user.handleErrors(Errors::ERR_BADCHANNELKEY, channelName);
-
+	std::cout << "we gonna go for static-cast to check the limits" << std::endl;
 	if (static_cast<size_t>(channel->getLimit()) <= channel->getMembers().size() && !channel->isOperator(user.getFd()))
 		return user.handleErrors(Errors::ERR_CHANNELISFULL, channelName);
 
@@ -204,4 +207,5 @@ void join(Client& client, int fd, const std::vector<std::string> &param)
 	std::string msg = ":" + user.getSource() + " JOIN :" + channelName + "\r\n";
 	channel->broadcast(msg, user);
 	user.respond(msg);
+	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }

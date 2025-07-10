@@ -3,6 +3,7 @@
 
 void    pass(Client& client, int fd, const std::vector<std::string> &param)
 {
+    std::cout << "\033[33m\033[1m" << "Command: PASS started" << "\033[0m" << std::endl;
     User&       user { client[fd] };
 
     if (user.getStatus() == RegStatus::REGISTERING)
@@ -26,4 +27,5 @@ void    pass(Client& client, int fd, const std::vector<std::string> &param)
         return ;
     }
     user.setStatus(RegStatus::REGISTERING);
+    std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }

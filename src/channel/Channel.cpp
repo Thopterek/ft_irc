@@ -4,9 +4,9 @@ Channel::Channel(std::string name, unsigned int id) : id(id), name(name) {};
 
 void Channel::addMember(unsigned int clientId)
 {
-	if (inviteOnly && !_invites[clientId])
+	if (inviteOnly && isInvited(clientId) == false)
 		return;
-	if (_kicked[clientId])
+	if (isKicked(clientId) == true)
 		return;
 	size_t channelSize = 0;
 	for (const auto &member : _members)
@@ -16,7 +16,7 @@ void Channel::addMember(unsigned int clientId)
 	}
 	if (limit != 0 && channelSize >= static_cast<size_t>(limit))
 		return;
-	if (_members[clientId])
+	if (isMember(clientId) == true)
 		return; // Already a member
 	// client->channelId = this->id;
 
@@ -65,12 +65,18 @@ void Channel::removeOperator(unsigned int clientId)
 }
 bool Channel::isOperator(unsigned int clientId)
 {
-	return _operators[clientId];
+	auto it = _operators.find(clientId);
+	if (it == _operators.end())
+		return (false);
+	return (true);
 }
 
 bool Channel::isMember(unsigned int clientId)
 {
-	return _members[clientId];
+	auto it = _members.find(clientId);
+	if (it == _members.end())
+		return (false);
+	return (true);
 }
 
 std::map<unsigned int, bool> & Channel::getMembers()
@@ -80,7 +86,18 @@ std::map<unsigned int, bool> & Channel::getMembers()
 
 bool Channel::isKicked(unsigned int client)
 {
-	return _kicked[client];
+	auto it = _kicked.find(client);
+	if (it == _kicked.end())
+		return (false);
+	return (true);
+}
+
+bool Channel::isInvited(unsigned int clientId)
+{
+	auto it = _invites.find(clientId);
+	if (it == _invites.end())
+		return (false);
+	return (true);
 }
 
 // std::string Channel::getInfo()

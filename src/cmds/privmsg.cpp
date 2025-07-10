@@ -50,6 +50,7 @@ static void messageChannel(const std::vector<std::string>& params,
 
 void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
 {
+    std::cout << "\033[33m\033[1m" << "Command: PRIVMSG started" << "\033[0m" << std::endl;
     User&   user { client[fd] };
 
     if (user.getStatus() != RegStatus::REGISTERED)
@@ -73,4 +74,5 @@ void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
         messageChannel(params, fd, client);
     else
         user.handleErrors(Errors::ERR_NORECIPIENT, "PRIVMSG");
+    std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }

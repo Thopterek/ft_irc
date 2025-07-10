@@ -40,8 +40,12 @@ class Channel
 
 		void addOperator(unsigned int clientId);
 		void removeOperator(unsigned int clientId);
+		/*
+			is someone somone checks
+		*/
 		bool isOperator(unsigned int clientId);
 		bool isMember(unsigned int clientId);
+		bool isInvited(unsigned int clientId);
 		std::string getPassword();
 		void setPassword(std::string newPassword);
 		void setTopic(std::string newTopic);

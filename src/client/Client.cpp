@@ -61,7 +61,7 @@ int Client::ircToupper(int c)
     from this point on channel handling functions
 */
 Channel* Client::getChannelByName(const std::string& name) {
-	std::unordered_map<std::string, Channel*>::iterator it = channels.find(name);
+	auto it = channels.find(name);
 	if (it != channels.end())
 		return it->second;
 	return NULL;

@@ -3,6 +3,7 @@
 
 void    user(Client& client, int fd, const std::vector<std::string> &param)
 {
+    std::cout << "\033[33m\033[1m" << "Command: USER started" << "\033[0m" << std::endl;
     User&    user { client[fd] };
     
     if (user.getNickName().empty())
@@ -26,4 +27,5 @@ void    user(Client& client, int fd, const std::vector<std::string> &param)
     user.setRealName(param.at(3));
     user.setStatus(RegStatus::REGISTERED);
     user.respond(":server 001 " + user.getNickName() + " :Welcome to the network Network, " + user.getNickName() + "\r\n");
+	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }

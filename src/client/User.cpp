@@ -126,7 +126,6 @@ std::string User::getSource() const
 
 void    User::buffer(std::string_view input)
 {
-    std::cout << input << ": got added to the buffer" << std::endl;
     m_buffer += input;
 }
 

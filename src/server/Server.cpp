@@ -304,9 +304,9 @@ void	Server::acceptingClient() {
 			std::string address = inet_ntoa(client_info.sin_addr);
 			struct hostent *client_host = gethostbyname(address.c_str());
 			std::string hostname = client_host->h_name;
-			std::cout << "new client at: '" << address << "'" << std::endl;
-			std::cout << "and with fd: '" << client_fd << "' got accepted" << std::endl;
-			std::cout << "his hostname is '" << hostname << "'" << std::endl;
+			// std::cout << "new client at: '" << address << "'" << std::endl;
+			std::cout << "\033[33m\033[1m" << "client with '" << client_fd << "' got accepted" << "\033[0m" << std::endl;
+			// std::cout << "his hostname is '" << hostname << "'" << std::endl;
 			fresh.push_back(new_client);
 			clients.connect(client_fd, address, hostname, password);
 			sendMsg("Welcome to our IRC server", client_fd);

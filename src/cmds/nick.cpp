@@ -3,6 +3,7 @@
 
 static Errors validate(Client& client, int fd, const std::string &nick)
 {
+    std::cout << "\033[33m\033[1m" << "Command: NICK started" << "\033[0m" << std::endl;
     if (nick.empty())
         return (Errors::ERR_NONICKNAMEGIVEN);
     if (!std::isalpha(nick.front()) || nick.size() > 9)
@@ -45,6 +46,7 @@ void    nick(Client& client, int fd, const std::vector<std::string> &param)
     if (user.getNickName().empty())
     {
         user.setNickName(newNick);
+        std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
         return ;
     }
     if (client.ircCapitalize(user.getNickName()) == client.ircCapitalize(newNick))
@@ -56,4 +58,5 @@ void    nick(Client& client, int fd, const std::vector<std::string> &param)
     //     member->broadcast(user.getSource() + " NICK :" + newNick, user);
     user.setOldNick(user.getNickName());
     user.setNickName(newNick);
+    std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }

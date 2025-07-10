@@ -64,7 +64,6 @@ Parser::dispatchCommand(Client& client, int fd, const std::vector<std::string>& 
     try
     {
         m_cmds.at(cmd)(client, fd, params);
-        std::cout << "DEBUG: it went into handler" << std::endl;
     }
     catch (const std::out_of_range&)
     {
@@ -76,7 +75,6 @@ void    Parser::parseAndDispatch(Client &clients, int fd)
 {
     User&   user { clients[fd] };
     
-    std::cout << user.getBuffer() << ": a whole buffer" << std::endl;
     try
     {   
         std::vector<std::string>    tokens{ tokenize(user.getBuffer()) };

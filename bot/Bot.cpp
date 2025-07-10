@@ -315,7 +315,7 @@ void	Bot::acceptUser() {
 			new_client.events = POLLIN;
 			fresh.push_back(new_client);
 			std::cout << "USER CONNECTED TO THE BOT" << std::endl;
-			sendBinary(client_fd);
+			// sendBinary(client_fd);
 		}
 	}
 }
@@ -359,6 +359,7 @@ Bot::iter	Bot::recvServer(iter it) {
 	buffer.resize(512);
 	int check = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
 	if (check < 1) {
+		std::cerr << "SERVER FAILED" << std::endl;
 		close(it->fd);
 		bot_fd = -1;
 		return (polling.erase(it));
