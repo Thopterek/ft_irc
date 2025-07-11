@@ -54,6 +54,11 @@ void    User::setRealName(std::string_view realName)
     m_realName = realName;
 }
 
+void    User::setUserServerName(std::string_view userServerName)
+{
+    m_serverName = userServerName;
+}
+
 void    User::setStatus(RegStatus status)
 {
     m_status = status;
@@ -142,7 +147,7 @@ User::buildMsg(Errors errCode, const std::string& cmd, const std::string& errMsg
     std::string errorCode {std::to_string(static_cast<int>(errCode))};
     
     serverPrefix += (" " + errorCode + " " + getNickName());
-    return (serverPrefix + " " + cmd + " " + errMsg + " \r\n");
+    return (serverPrefix + " " + cmd + " :" + errMsg + "\r\n");
 }
 
 void    User::respond(std::string_view msg)

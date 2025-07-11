@@ -23,9 +23,10 @@ void    user(Client& client, int fd, const std::vector<std::string> &param)
     }
     user.setUserName(param[0]);
     user.setHostName(param.at(1));
-    // user.setServerName(param.at(2));
+    user.setUserServerName(param.at(2));
     user.setRealName(param.at(3));
     user.setStatus(RegStatus::REGISTERED);
-    user.respond(":server 001 " + user.getNickName() + " :Welcome to the network Network, " + user.getNickName() + "\r\n");
+    const std::string&  welcome { user.getNickName() + " :Welcome to the NCS IRC network, " };
+    user.respond(user.getServerName() + " 001 " + welcome + user.getSource() + "\r\n");
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
