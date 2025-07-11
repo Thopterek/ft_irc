@@ -54,6 +54,11 @@ void    User::setRealName(std::string_view realName)
     m_realName = realName;
 }
 
+void    User::setUserServerName(std::string_view userServerName)
+{
+    m_serverName = userServerName;
+}
+
 void    User::setStatus(RegStatus status)
 {
     m_status = status;
