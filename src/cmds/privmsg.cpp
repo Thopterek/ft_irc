@@ -1,5 +1,6 @@
 #include "../../inc/User.hpp"
 #include "../../inc/Parser.hpp"
+#include "../../inc/Channel.hpp"
 
 static bool isUser(const std::string& target)
 {
@@ -31,21 +32,47 @@ static void    directMessage(const std::vector<std::string>& params
     }
 }
 //  TODO: Inform Chris about the channel Privmsg.
+//  TODO: Inform Chris about the channel Privmsg.
+// static void messageChannel(const std::vector<std::string>& params,
+//                            int fd, Client& client)
+// {
+//     User&   user { client[fd] };
+//     const std::string&  target { params.at(0) };
+//     auto    channels { user.getChannels() };
+//     auto    iter { channels.find(target) };
+//     if (iter == channels.end())
+//     {
+//         user.handleErrors(Errors::ERR_CANNOTSENDTOCHAN, "PRIVMSG");
+//         return ;
+//     }
+//     const std::string  targetMessage { target + " :" + params.at(1) + "\r\n" };
+//     const std::string   msg { user.getSource() + " PRIVMSG " + targetMessage };
+//     // iter->second->broadcast(message, &user);
+// }
+
 static void messageChannel(const std::vector<std::string>& params,
-                           int fd, Client& client)
+    int fd, Client& client)
 {
     User&   user { client[fd] };
     const std::string&  target { params.at(0) };
-    auto    channels { user.getChannels() };
-    auto    iter { channels.find(target) };
-    if (iter == channels.end())
+    // auto    channels { user.getChannels() };
+    std::string channelName = params[0];
+    Channel* channel = client.getChannelByName(channelName);
+    std::cout << "Channels: " << std::endl;
+    // for (const auto& [channelName, channelPtr] : channels)
+    // {
+    //     std::cout << "Channel Name: " << channelName << ", Channel Pointer: " << channelPtr << std::endl;
+    // }
+    // auto    iter { channels.find(target) };
+    // if (iter == channels.end())
+    if (channel == NULL)
     {
         user.handleErrors(Errors::ERR_CANNOTSENDTOCHAN, "PRIVMSG");
         return ;
     }
     const std::string  targetMessage { target + " :" + params.at(1) + "\r\n" };
     const std::string   msg { user.getSource() + " PRIVMSG " + targetMessage };
-    // iter->second->broadcast(message, &user);
+    channel->broadcast(msg, user);
 }
 
 void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
