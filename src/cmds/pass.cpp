@@ -8,12 +8,12 @@ void    pass(Client& client, int fd, const std::vector<std::string> &param)
 
     if (user.getStatus() == RegStatus::REGISTERING)
     {
-        user.handleErrors(Errors::ERR_REGISTERING, "PASS");
+        user.handleErrors(Errors::ERR_REGISTERING, "");
         return ;
     }
     else if (user.getStatus() == RegStatus::REGISTERED)
     {
-        user.handleErrors(Errors::ERR_ALREADYREGISTERED, "PASS");
+        user.handleErrors(Errors::ERR_ALREADYREGISTERED, "");
         return ;
     }
     if (param.empty() || param.size() != 1)
@@ -23,7 +23,7 @@ void    pass(Client& client, int fd, const std::vector<std::string> &param)
     }
     if (param[0] != user.getServerPwd())
     {
-        user.handleErrors(Errors::ERR_PASSWDMISMATCH, "PASS");
+        user.handleErrors(Errors::ERR_PASSWDMISMATCH, "");
         return ;
     }
     user.setStatus(RegStatus::REGISTERING);

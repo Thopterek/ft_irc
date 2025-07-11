@@ -7,31 +7,34 @@ User::User(int fd, std::string_view ip, std::string_view hostName, std::string_v
     m_hostName{hostName}
 {
     m_errors.emplace(Errors::ERR_NONE, "");
-    m_errors.emplace(Errors::ERR_NICKMORETHAN9CHARS, ": Toomuch letters");
-    m_errors.emplace(Errors::ERR_NONICKNAMEGIVEN,  ": No Nick given");
-    m_errors.emplace(Errors::ERR_NICKNAMEINUSE, ": Nick in use");
-    m_errors.emplace(Errors::ERR_ERRONEUSNICKNAME, ": Erroneous nickname");
-    m_errors.emplace(Errors::ERR_NEEDMOREPARAMS, ": More parameters needed");
-    m_errors.emplace(Errors::ERR_ALREADYREGISTERED, ": Already registered");
-    m_errors.emplace(Errors::ERR_REGISTERING, ": Pass set, continue registration");
-    m_errors.emplace(Errors::ERR_PASSWDMISMATCH, ": Wrong password entered");
-    m_errors.emplace(Errors::ERR_NOSUCHNICK, ": No such nick");
-    m_errors.emplace(Errors::ERR_CANNOTSENDTOCHAN, ": You cannot send message to channel");
+    m_errors.emplace(Errors::ERR_NICKMORETHAN9CHARS, ":Toomuch letters");
+    m_errors.emplace(Errors::ERR_NONICKNAMEGIVEN,  ":No Nick given");
+    m_errors.emplace(Errors::ERR_NICKNAMEINUSE, ":Nick is already in use");
+    m_errors.emplace(Errors::ERR_ERRONEUSNICKNAME, ":Erroneous nickname");
+    m_errors.emplace(Errors::ERR_NEEDMOREPARAMS, ":Not enough parameters");
+    m_errors.emplace(Errors::ERR_NOTREGISTERED, ":You have not registered");
+    m_errors.emplace(Errors::ERR_ALREADYREGISTERED, ":You may not reregister");
+    m_errors.emplace(Errors::ERR_REGISTERING, ":Pass set, continue registration");
+    m_errors.emplace(Errors::ERR_PASSWDMISMATCH, ":Password incorrect");
+    m_errors.emplace(Errors::ERR_NOSUCHNICK, ":No such nick");
+    m_errors.emplace(Errors::ERR_CANNOTSENDTOCHAN, ":Cannot send to channel");
     m_errors.emplace(Errors::ERR_TOOMANYTARGETS, ": Too many targets");
-    m_errors.emplace(Errors::ERR_NORECIPIENT, ": You must provide a target for your message");
-    m_errors.emplace(Errors::ERR_NOTEXTTOSEND, ": Message must not be empty");
-    m_errors.emplace(Errors::ERR_UNKNOWNMODE, ": Mode unknown");
-    m_errors.emplace(Errors::ERR_NOSUCHCHANNEL, ": NO SUCH CHANNEL");
-    m_errors.emplace(Errors::ERR_NOTONCHANNEL, ": NOT ON CHANNEL");
-    m_errors.emplace(Errors::ERR_CHANOPRIVSNEEDED, ": CHANN PRIVS SOMETHING");
+    m_errors.emplace(Errors::ERR_NORECIPIENT, ":No recipient given (PRIVMSG)");
+    m_errors.emplace(Errors::ERR_NOTEXTTOSEND, ":No text to send");
+    m_errors.emplace(Errors::ERR_UNKNOWNMODE, ":is unknown mode char to me");
+    m_errors.emplace(Errors::ERR_NOSUCHCHANNEL, ":No such channel");
+    m_errors.emplace(Errors::ERR_NOTONCHANNEL, ":You're not on that channel");
+    m_errors.emplace(Errors::ERR_CHANOPRIVSNEEDED, ":You're not channel operator");
+    m_errors.emplace(Errors::ERR_UNKNOWNCOMMAND, ":Unknown command");
+    m_errors.emplace(Errors::ERR_INPUTTOOLONG, ":Input line wass too long");
     // newly added
-    m_errors.emplace(Errors::ERR_BADCHANNELKEY, ": Message AAAAAAAAA not be empty");
-    m_errors.emplace(Errors::ERR_BANNEDFROMCHAN, ": Mode AAAAAA");
-    m_errors.emplace(Errors::ERR_BADCHANMASK, ": NO SUCH CHANNEL");
-    m_errors.emplace(Errors::ERR_CHANNELISFULL, ": NOT ON CHANNEL");
+    m_errors.emplace(Errors::ERR_BADCHANNELKEY, ":Cannot join channel (+k)");
+    m_errors.emplace(Errors::ERR_BANNEDFROMCHAN, ":Cannot join channel (+b)");
+    m_errors.emplace(Errors::ERR_BADCHANMASK, ":Bad Channel Mask");
+    m_errors.emplace(Errors::ERR_CHANNELISFULL, ":Cannot join channel (+l)");
     m_errors.emplace(Errors::ERR_NOTOPLEVEL, ": CHANN PRIVS SOMETHING");
-    m_errors.emplace(Errors::ERR_USERONCHANNEL, ": AAAA");
-    m_errors.emplace(Errors::ERR_USERNOTINCHANNEL, ": AAA MORE SCREAMING A");
+    m_errors.emplace(Errors::ERR_USERONCHANNEL, ":is already on channel");
+    m_errors.emplace(Errors::ERR_USERNOTINCHANNEL, ":They aren't on that channel");
 }
 
 void    User::setNickName(std::string_view nickName)
@@ -120,7 +123,7 @@ int User::getFd() const
 
 std::string User::getSource() const
 {
-    std::string source {m_nickName.empty() ? "*" : ":" + m_nickName};
+    std::string source { m_nickName.empty() ? "*" : ":" + m_nickName };
 
     if (!m_userName.empty())
         source += ("!" + m_userName);
@@ -145,9 +148,10 @@ User::buildMsg(Errors errCode, const std::string& cmd, const std::string& errMsg
 {
     std::string serverPrefix { ":" + getServerName()};
     std::string errorCode {std::to_string(static_cast<int>(errCode))};
-    
+    const std::string&  temp { cmd.empty() ? " " : " " + cmd + " " };
+
     serverPrefix += (" " + errorCode + " " + getNickName());
-    return (serverPrefix + " " + cmd + " :" + errMsg + "\r\n");
+    return (serverPrefix + temp + errMsg + "\r\n");
 }
 
 void    User::respond(std::string_view msg)
@@ -156,23 +160,8 @@ void    User::respond(std::string_view msg)
         throw   std::runtime_error("Unable to send message");
 }
 
-int User::getChannelCount() const
-{
-    return (m_channelCount);
-}
-
 RegStatus User::getStatus() const
 {
     return (m_status);
 }
 
-void    User::incrementChannelCount()
-{
-    ++m_channelCount;
-}
-
-void    User::decrementChannelCount()
-{
-    if (m_channelCount > 0)
-        --m_channelCount;
-}

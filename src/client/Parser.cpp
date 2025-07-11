@@ -67,7 +67,7 @@ Parser::dispatchCommand(Client& client, int fd, const std::vector<std::string>& 
     }
     catch (const std::out_of_range&)
     {
-        user.handleErrors(Errors::ERR_UNKNOWNCOMMAND, cmd);
+        throw std::out_of_range(cmd);
     }
 }
 
@@ -75,6 +75,12 @@ void    Parser::parseAndDispatch(Client &clients, int fd)
 {
     User&   user { clients[fd] };
     
+    std::string_view buffer { user.getBuffer() };
+    if (buffer.size() > 512)
+    {
+        user.handleErrors(Errors::ERR_INPUTTOOLONG, "");
+        return ;
+    }
     try
     {   
         std::vector<std::string>    tokens{ tokenize(user.getBuffer()) };
@@ -83,7 +89,7 @@ void    Parser::parseAndDispatch(Client &clients, int fd)
     }
     catch (const std::out_of_range& e)
     {
-        user.respond(e.what());
+        user.handleErrors(Errors::ERR_UNKNOWNCOMMAND, e.what());
     }
     user.getBuffer().clear();
 }

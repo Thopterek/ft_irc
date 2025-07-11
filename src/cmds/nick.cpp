@@ -31,7 +31,7 @@ void    nick(Client& client, int fd, const std::vector<std::string> &param)
     }
     if (param.empty())
     {
-        user.handleErrors(Errors::ERR_NONICKNAMEGIVEN, "NICK");
+        user.handleErrors(Errors::ERR_NONICKNAMEGIVEN, "");
         return ;
     }
 
@@ -40,7 +40,11 @@ void    nick(Client& client, int fd, const std::vector<std::string> &param)
 
     if (err != Errors::ERR_NONE)
     {
-        user.handleErrors(err, "NICK");
+        if (err == Errors::ERR_NONICKNAMEGIVEN)
+            user.handleErrors(err, "");
+        else
+            user.handleErrors(err, newNick);
+
         return ;
     }
     if (user.getNickName().empty())

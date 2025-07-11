@@ -30,25 +30,8 @@ static void    directMessage(const std::vector<std::string>& params
             return ;
         }
     }
+    client[fd].handleErrors(Errors::ERR_NOSUCHNICK, target);
 }
-//  TODO: Inform Chris about the channel Privmsg.
-//  TODO: Inform Chris about the channel Privmsg.
-// static void messageChannel(const std::vector<std::string>& params,
-//                            int fd, Client& client)
-// {
-//     User&   user { client[fd] };
-//     const std::string&  target { params.at(0) };
-//     auto    channels { user.getChannels() };
-//     auto    iter { channels.find(target) };
-//     if (iter == channels.end())
-//     {
-//         user.handleErrors(Errors::ERR_CANNOTSENDTOCHAN, "PRIVMSG");
-//         return ;
-//     }
-//     const std::string  targetMessage { target + " :" + params.at(1) + "\r\n" };
-//     const std::string   msg { user.getSource() + " PRIVMSG " + targetMessage };
-//     // iter->second->broadcast(message, &user);
-// }
 
 static void messageChannel(const std::vector<std::string>& params,
     int fd, Client& client)
@@ -65,9 +48,13 @@ static void messageChannel(const std::vector<std::string>& params,
     // }
     // auto    iter { channels.find(target) };
     // if (iter == channels.end())
+    /*
+    * We need to know if the channel indeed exists but the user is not a member
+        or that it does not exit at all
+    */
     if (channel == NULL)
     {
-        user.handleErrors(Errors::ERR_CANNOTSENDTOCHAN, "PRIVMSG");
+        user.handleErrors(Errors::ERR_CANNOTSENDTOCHAN, channelName);
         return ;
     }
     const std::string  targetMessage { target + " :" + params.at(1) + "\r\n" };
@@ -82,17 +69,17 @@ void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
 
     if (user.getStatus() != RegStatus::REGISTERED)
     {
-        user.handleErrors(Errors::ERR_NOTREGISTERED, "PRIVMSG");
+        user.handleErrors(Errors::ERR_NOTREGISTERED, "");
         return ;
     }
     if (params.size() < 1 || params.at(0).empty())
     {
-        user.handleErrors(Errors::ERR_NORECIPIENT, "PRIVMSG");
+        user.handleErrors(Errors::ERR_NORECIPIENT, "");
         return ;
     }
     if (params.size() < 2 || params.at(1).empty())
     {
-        user.handleErrors(Errors::ERR_NOTEXTTOSEND, "PRIVMSG");
+        user.handleErrors(Errors::ERR_NOTEXTTOSEND, "");
         return ;
     }
     if (isUser(params[0]))
@@ -100,6 +87,6 @@ void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
     else if (isChannel(params[0]))
         messageChannel(params, fd, client);
     else
-        user.handleErrors(Errors::ERR_NORECIPIENT, "PRIVMSG");
+        user.handleErrors(Errors::ERR_NORECIPIENT, "");
     std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
