@@ -303,7 +303,10 @@ void Channel::broadcast(const std::string& msg, User &user) {
 		if (it->first == static_cast<unsigned int>(user.getFd()))
 			continue;
 		if (send(it->first, actual.c_str(), actual.size(), MSG_DONTWAIT) < 0)
+		{
 			std::cerr << "Error: send in broadcoast failed" << std::endl;
+			perror("send");
+		}
 	}
 }
 
