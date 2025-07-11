@@ -51,11 +51,13 @@ void    nick(Client& client, int fd, const std::vector<std::string> &param)
     }
     if (client.ircCapitalize(user.getNickName()) == client.ircCapitalize(newNick))
         return ;
-    /*
-        after merging with channel handling uncomment and test
-    */
-    // for (auto member : getChannels())
-    //     member->broadcast(user.getSource() + " NICK :" + newNick, user);
+    auto& channels { client.getAllChannels() };
+    for (auto& member : channels)
+    {
+        Channel*    channel { member.second.get() };
+        if (channel->isMember(user.getFd()))
+            channel->broadcast(user.getSource() + "NICK :" + newNick, user);
+    }
     user.setOldNick(user.getNickName());
     user.setNickName(newNick);
     std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;

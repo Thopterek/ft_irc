@@ -56,7 +56,7 @@ void    User::setRealName(std::string_view realName)
 
 void    User::setUserServerName(std::string_view userServerName)
 {
-    m_serverName = userServerName;
+    m_userServerName = userServerName;
 }
 
 void    User::setStatus(RegStatus status)
@@ -156,11 +156,6 @@ void    User::respond(std::string_view msg)
         throw   std::runtime_error("Unable to send message");
 }
 
-const std::map<const std::string, Channel*>&   User::getChannels() const
-{
-    return (m_channels);
-}
-
 int User::getChannelCount() const
 {
     return (m_channelCount);
@@ -170,18 +165,6 @@ RegStatus User::getStatus() const
 {
     return (m_status);
 }
-
-// void    User::addToChannel(Channel* channel)
-// {
-//     m_channels.emplace(channel->getChannelName(), channel);
-// }
-
-// void    User::removeFromChannels(Channel* channel)
-// {
-//     auto  iter { m_channels.find(channel->getChannelName()) };
-//     if (iter != end(m_channels))
-//         m_channels.erase(iter);
-// }
 
 void    User::incrementChannelCount()
 {
