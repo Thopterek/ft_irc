@@ -14,6 +14,7 @@ void	handler(int signum) {
 Bot::Bot(std::string name) : bot_name(name), file("img.png", "small png file"), file_type(FileType::BINARY),
 server_port(6667), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
+	setupMsgs();
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
 }
 
@@ -28,6 +29,7 @@ server_password(""), server_ip(""), bot_fd(-1), connect_to_bot_fd(-1), polling()
 	setupPort();
 	setupPass();
 	setupSockets();
+	setupMsgs();
 }
 
 /*
@@ -200,6 +202,24 @@ void	Bot::setupSockets() {
 }
 
 /*
+	Basic messages to be sent and compared to
+	as per how the bot is interacting with clients
+*/
+void	Bot::setupMsgs() {
+	joined = "JOIN :" + bot_name + "\r\n";
+	std::string line_one = "Hello! If you want to use the bot write: info\nits going to send information about file and its description\n";
+	std::string line_two = "if you want to start file transfer write: 'DCC GET " + bot_name + " " + file.first + "\r\n";
+	manual = "PRIVMSG #" + bot_name + line_one + line_two;
+	info_response = "PRIVMSG #" + bot_name + " file name:" + file.first + " and description: " + file.second + "\r\n";
+	dcc_get = "DCC GET " + bot_name + " " + file.first + "\r\n";
+	/*
+		DCC send should be changed so that it sends it to the target
+		after testing the actual thing after merge will be modified
+	*/
+	dcc_send = "PRIVMSG #" + bot_name + ":\\x01DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\r\n";
+}
+
+/*
 	used before the polling loop
 	cleaning up all the information
 */
@@ -279,9 +299,6 @@ int	Bot::sendInitial() {
 		std::cerr << "Error: sending user failed" << std::endl;
 		return (1);
 	}
-	/*
-		To add after the channels are done
-	*/
 	std::string join = "JOIN #" + bot_name + "\r\n";
 	check = send(bot_fd, join.c_str(), join.size(), MSG_DONTWAIT);
 	if (check == -1) {
@@ -368,15 +385,17 @@ Bot::iter	Bot::recvServer(iter it) {
 		buffer.resize(check);
 		for (auto print = buffer.begin(); print != buffer.end(); ++print)
 			std::cout << *print << std::flush;
-		if (buffer.size() > 7) {
-			if (buffer.substr(buffer.size() - 7) == ":info\r\n")
-				sendInfo();
+		if (buffer.size() > joined.size()) {
+			if (buffer.substr(buffer.size() - joined.size()) == joined)
+				sendManual();
 		}
-		std::string tmp = ":DCC GET " + bot_name + " " + file.first + "\r\n"; 
-		if (buffer.size() > tmp.size()) {
-			if (buffer.substr(buffer.size() - tmp.size()) == tmp)
-				sendDCC();
-
+		if (buffer.size() > info.size()) {
+			if (buffer.substr(buffer.size() - info.size()) == info)
+				sendInfoResponse();
+		}
+		if (buffer.size() > dcc_get.size()) {
+			if (buffer.substr(buffer.size() - dcc_get.size()) == dcc_get)
+				DCCsend();
 		}
 	}
 	buffer.clear();
@@ -444,20 +463,26 @@ void	Bot::sendBinary(int fd) {
 	std::cout << "File send properly to client: " << fd << std::endl;
 }
 
-void	Bot::sendInfo() {
-	std::string info = "PRIVMSG #" + bot_name + " file name:" + file.first + " and description: " + file.second + "\r\n";
-	int check = send(bot_fd, info.c_str(), info.size(), MSG_DONTWAIT);
+void	Bot::sendInfoResponse() {
+	int check = send(bot_fd, info_response.c_str(), info_response.size(), MSG_DONTWAIT);
 	if (check == -1) {
-		std::cerr << "Error: sending info failed" << std::endl;
+		std::cerr << "Error: sending info_response failed" << std::endl;
 		return ;
 	}
 }
 
-void	Bot::sendDCC() {
-	std::string info = "PRIVMSG #" + bot_name + " DCC SEND " + file.first + " port: " + std::to_string(connect_to_bot_fd) + "\r\n";
-	int check = send(bot_fd, info.c_str(), info.size(), MSG_DONTWAIT);
+void	Bot::DCCsend() {
+	int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
 	if (check == -1) {
-		std::cerr << "Error: sending info failed" << std::endl;
+		std::cerr << "Error: sending DCCsend failed" << std::endl;
+		return ;
+	}
+}
+
+void	Bot::sendManual() {
+	int check = send(bot_fd, manual.c_str(), manual.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending manual failed" << std::endl;
 		return ;
 	}
 }
