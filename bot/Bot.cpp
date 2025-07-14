@@ -472,6 +472,10 @@ void	Bot::sendInfoResponse() {
 }
 
 void	Bot::DCCsend() {
+	// const std::unordered_map<int, User*> user_info = getUsers();
+	// std::string name = user_info[it->fd].getuserName();
+	// std::cout << name << std::endl;
+	// int	test = it->fd;
 	int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
 	if (check == -1) {
 		std::cerr << "Error: sending DCCsend failed" << std::endl;

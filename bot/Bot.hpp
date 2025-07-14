@@ -22,6 +22,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+/*
+	access to the user information
+	through Client and User headers
+*/
+#include "../inc/Client.hpp"
+#include "../inc/User.hpp"
 
 /*
 	Type of a file thats can be sent
