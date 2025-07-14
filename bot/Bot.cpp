@@ -12,7 +12,7 @@ void	handler(int signum) {
 	prefilled information without checks
 */
 Bot::Bot(std::string name) : bot_name(name), file("img.png", "small png file"), file_type(FileType::BINARY),
-server_port(6667), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
+server_port(6667), server_password("123"), server_ip("10.12.4.9"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
 	setupMsgs();
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
