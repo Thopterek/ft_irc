@@ -22,6 +22,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
+/*
+	access to the user information
+	through Client and User headers
+*/
+#include "../inc/Client.hpp"
+#include "../inc/User.hpp"
 
 /*
 	Type of a file thats can be sent
@@ -55,6 +61,12 @@ class	Bot {
 		int	bot_fd, connect_to_bot_fd;
 		std::vector<struct pollfd> polling;
 		std::vector<struct pollfd> fresh;
+		/*
+			bot manual to help how it works
+			and how you can interact with it
+		*/
+		std::string joined, manual, info_response, dcc_get, dcc_send;
+		const std::string info = "info\r\n";
 	public:
 		Bot();
 		Bot(std::string name);
@@ -78,6 +90,7 @@ class	Bot {
 		void	setupPort();
 		void	setupPass();
 		void	setupSockets();
+		void	setupMsgs();
 		void	cleanExit(const std::string &msg);
 		/*
 			helper typedef to pass around easier
@@ -107,8 +120,9 @@ class	Bot {
 			plus the sending the messages
 		*/
 		void	sendBinary(int fd);
-		void	sendInfo();
-		void	sendDCC();
+		void	sendInfoResponse();
+		void	DCCsend();
+		void	sendManual();
 };
 
 #endif
