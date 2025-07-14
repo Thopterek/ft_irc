@@ -7,7 +7,7 @@ void topic(Client& client, int fd, const std::vector<std::string> &param)
 		std::cout << "THERE WAS THIS MANY CHANNELS" << std::endl;
 	std::cout << "\033[33m\033[1m" << "Command: Topic started" << "\033[0m" << std::endl;
 	User& user = client[fd];
-    if (param.size() < 2)
+    if (param.size() < 1)
     {
         user.handleErrors(Errors::ERR_NEEDMOREPARAMS, "TOPIC");
         return;
@@ -19,20 +19,20 @@ void topic(Client& client, int fd, const std::vector<std::string> &param)
         user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);
         return;
     }
-    if (!channel->isOperator(user.getFd()))
-        return user.handleErrors(Errors::ERR_CHANOPRIVSNEEDED, channelName);
     if (param.size() == 1)
     {
         std::string topic = channel->getTopic();
         if (topic.empty())
-            user.handleErrors(Errors::ERR_NOTOPIC, channelName);
+        user.handleErrors(Errors::ERR_NOTOPIC, channelName);
         else
         {
-            std::string msg = ":" + user.getSource() + " TOPIC " + channelName + " +" + topic + "\r\n";
+            std::string msg = ":" + user.getSource() + " TOPIC " + channelName + " :" + topic + "\r\n";
             user.respond(msg);
         }
         return;
     }
+    if (!channel->isOperator(user.getFd()))
+        return user.handleErrors(Errors::ERR_CHANOPRIVSNEEDED, channelName);
     std::string newTopic = param[1];
     channel->setTopic(newTopic);
     std::string msg = ":" + user.getSource() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
