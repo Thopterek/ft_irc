@@ -12,7 +12,7 @@ void	handler(int signum) {
 	prefilled information without checks
 */
 Bot::Bot(std::string name) : bot_name(name), file("img.png", "small png file"), file_type(FileType::BINARY),
-server_port(6667), server_password("123"), server_ip("10.12.4.9"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
+server_port(6667), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
 	setupMsgs();
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
@@ -206,8 +206,8 @@ void	Bot::setupSockets() {
 	as per how the bot is interacting with clients
 */
 void	Bot::setupMsgs() {
-	joined = "JOIN :" + bot_name + "\r\n";
-	std::string line_one = "Hello! If you want to use the bot write: info\nits going to send information about file and its description\n";
+	joined = "JOIN :#" + bot_name + "\r\n";
+	std::string line_one = " Hello! If you want to use the bot write: info\nits going to send information about file and its description\n";
 	std::string line_two = "if you want to start file transfer write: 'DCC GET " + bot_name + " " + file.first + "\r\n";
 	manual = "PRIVMSG #" + bot_name + line_one + line_two;
 	info_response = "PRIVMSG #" + bot_name + " file name:" + file.first + " and description: " + file.second + "\r\n";

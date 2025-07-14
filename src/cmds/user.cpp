@@ -3,7 +3,6 @@
 
 void    user(Client& client, int fd, const std::vector<std::string> &param)
 {
-    std::cout << "\033[33m\033[1m" << "Command: USER started" << "\033[0m" << std::endl;
     User&    user { client[fd] };
     
     if (user.getNickName().empty())
@@ -26,7 +25,11 @@ void    user(Client& client, int fd, const std::vector<std::string> &param)
     user.setUserServerName(param.at(2));
     user.setRealName(param.at(3));
     user.setStatus(RegStatus::REGISTERED);
+    /*
+        NEVER TOUCH THIS LINE
+        PLEASE FOR THE LOVE OF GOD AND ALL THAT IS HOLLY
+        STOP IT AND LEAVE IT
+    */
     const std::string&  welcome { user.getNickName() + " :Welcome to the NCS IRC network, " };
-    user.respond(user.getServerName() + " 001 " + welcome + user.getSource() + "\r\n");
-	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
+    user.respond(":" + user.getServerName() + " 001 " + welcome + user.getSource() + "\r\n");
 }
