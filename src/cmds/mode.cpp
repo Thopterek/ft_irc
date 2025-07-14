@@ -28,8 +28,8 @@ void mode(Client& client, int fd, const std::vector<std::string> &param)
 		if (c == '-') { set = false; continue; }
 	
 		switch (c) {
-			// case 'i': channel->setInviteOnly(set); break;
-			// case 't': channel->setTopicProtection(set); break;
+			case 'i': channel->setInviteOnly(set); break;
+			case 't': channel->setTopicProtection(set); break;
 			case 'k':
 				if (set && param.size() > 2) channel->setPassword(param[2]);
 				else if (!set) channel->setPassword(""); // Passwort löschen

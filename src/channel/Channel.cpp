@@ -77,6 +77,8 @@ bool Channel::isMember(unsigned int clientId)
 	auto it = _members.find(clientId);
 	if (it == _members.end())
 		return (false);
+	if (it->second == false)
+		return (false);
 	return (true);
 }
 
@@ -90,6 +92,8 @@ bool Channel::isKicked(unsigned int client)
 	auto it = _kicked.find(client);
 	if (it == _kicked.end())
 		return (false);
+	if (it->second == false)
+		return (false);
 	return (true);
 }
 
@@ -98,9 +102,26 @@ bool Channel::isInvited(unsigned int clientId)
 	auto it = _invites.find(clientId);
 	if (it == _invites.end())
 		return (false);
+	if (inviteOnly == true && it->second == false)
+		return (false);
 	return (true);
 }
 
+bool Channel::isTopicProtected() const
+{
+	return anyoneCanChangeTopic;
+}
+void Channel::setTopicProtection(bool newTopic)
+{
+	this->anyoneCanChangeTopic = newTopic;
+}
+bool Channel::setInviteOnly(bool newinviteOnly) {
+	this->inviteOnly = newinviteOnly;
+	return this->inviteOnly;
+}
+bool Channel::isInviteOnly() const {
+	return inviteOnly;
+}
 // std::string Channel::getInfo()
 // {
 // 	std::string info = "Channel Name: " + name + "\n";
@@ -296,6 +317,7 @@ bool Channel::isInvited(unsigned int clientId)
 //     return "";
 // }
 
+//right now no protection case for use with privmsg
 void Channel::broadcast(const std::string& msg, User &user) {
 	std::string actual = msg + "\r\n";
 	for (std::map<unsigned int, bool>::iterator it = _members.begin(); it != _members.end(); ++it) {

@@ -18,7 +18,7 @@ Parser::Parser()
     m_cmds.emplace("QUIT", quit);
     m_cmds.emplace("PART", part);
     // m_cmds.emplace("CAP", handleCap);
-    // m_cmds.emplace("TOPIC", handleTopic);
+    m_cmds.emplace("TOPIC", topic);
     // m_cmds.emplace("WHO", handleWho);
     // m_cmds.emplace("PING", handlePing);
     // m_cmds.emplace("PONG", handlePong);
@@ -52,7 +52,7 @@ std::vector<std::string>    Parser::tokenize(std::string_view msg)
 void    
 Parser::dispatchCommand(Client& client, int fd, const std::vector<std::string>& tokens)
 {
-    User&   user { client[fd] };
+    // User&   user { client[fd] };
     
     if (tokens.empty())
         return ;

@@ -59,6 +59,16 @@ static void messageChannel(const std::vector<std::string>& params,
     }
     const std::string  targetMessage { target + " :" + params.at(1) + "\r\n" };
     const std::string   msg { user.getSource() + " PRIVMSG " + targetMessage };
+    if (channel->isMember(user.getFd()) == false)
+    {
+        user.handleErrors(Errors::ERR_NOTONCHANNEL, channelName);
+        return ;
+    }
+    if (channel->isKicked(user.getFd()))
+    {
+        user.handleErrors(Errors::ERR_BANNEDFROMCHAN, channelName);
+        return ;
+    }
     channel->broadcast(msg, user);
 }
 

@@ -25,6 +25,8 @@ enum class Errors
     ERR_NONE = 0,
     ERR_NICKMORETHAN9CHARS = 1,
     ERR_REGISTERING = 2,
+    ERR_NOTOPIC = 331, //check on this
+    ERR_INVITEONLYCHAN = 473, //check on this
     ERR_UNKNOWNERROR = 400,
     ERR_NOSUCHNICK = 401,
     ERR_NOSUCHCHANNEL = 403, // CHECK ON THIS

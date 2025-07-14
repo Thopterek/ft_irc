@@ -2,7 +2,7 @@
 #include "../../inc/Channel.hpp"
 
 //seem to need printing topic if pressent 
-// JOIN #foo,#bar                  ; Command to join channels #foo and
+// JOIN #foo 123PW                 ; Command to join channels #foo and
 // #bar.
 
 // JOIN 0                          ; Leave all currently joined
@@ -39,8 +39,8 @@ void join(Client& client, int fd, const std::vector<std::string> &param)
 		return user.handleErrors(Errors::ERR_BANNEDFROMCHAN, channelName);
 	}
 
-	// if (channel->isInviteOnly() && !channel->isInvited(user.getFd()))
-	// 	return user.handleErrors(Errors::ERR_INVITEONLYCHAN, channelName);
+	if (channel->isInviteOnly() && !channel->isInvited(user.getFd()))
+		return user.handleErrors(Errors::ERR_INVITEONLYCHAN, channelName);
 	std::cout << "next thing is checking the password" << std::endl;
 	if (!channel->getPassword().empty() && channel->getPassword() != password)
 		return user.handleErrors(Errors::ERR_BADCHANNELKEY, channelName);

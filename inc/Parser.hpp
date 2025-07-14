@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ndziadzi <ndziadzi@student.42heilbronn.    +#+  +:+       +#+        */
+/*   By: chuhlig <chuhlig@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/24 17:14:45 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/07/09 14:58:48 by ndziadzi         ###   ########.fr       */
+/*   Updated: 2025/07/14 10:33:00 by chuhlig          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,5 +50,6 @@ void kick(Client& client, int fd, const std::vector<std::string> &param);
 void mode(Client& client, int fd, const std::vector<std::string> &param);
 void part(Client& client, int fd, const std::vector<std::string> &param);
 void quit(Client& client, int fd, const std::vector<std::string> &param);
+void topic(Client& client, int fd, const std::vector<std::string> &param);
 
 #endif

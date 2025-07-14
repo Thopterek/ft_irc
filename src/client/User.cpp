@@ -35,6 +35,8 @@ User::User(int fd, std::string_view ip, std::string_view hostName, std::string_v
     m_errors.emplace(Errors::ERR_NOTOPLEVEL, ": CHANN PRIVS SOMETHING");
     m_errors.emplace(Errors::ERR_USERONCHANNEL, ":is already on channel");
     m_errors.emplace(Errors::ERR_USERNOTINCHANNEL, ":They aren't on that channel");
+    m_errors.emplace(Errors::ERR_NOTOPIC, ":No topic is set");
+    m_errors.emplace(Errors::ERR_INVITEONLYCHAN, ":Cannot join channel (+i)");
 }
 
 void    User::setNickName(std::string_view nickName)

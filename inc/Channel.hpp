@@ -43,6 +43,10 @@ class Channel
 		/*
 			is someone somone checks
 		*/
+		bool setInviteOnly(bool newinviteOnly);
+		bool isInviteOnly() const;
+		bool isTopicProtected() const;
+		void setTopicProtection(bool newtopic);
 		bool isOperator(unsigned int clientId);
 		bool isMember(unsigned int clientId);
 		bool isInvited(unsigned int clientId);

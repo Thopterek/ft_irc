@@ -11,6 +11,7 @@ void part(Client& client, int fd, const std::vector<std::string> &param)
 		return user.handleErrors(Errors::ERR_NEEDMOREPARAMS, "PART");
 
 	std::string channelName = param[0];
+	std::cout << "Channel Name?: " << channelName << std::endl;
 	Channel* channel = client.getChannelByName(channelName);
 	if (!channel)
 		return user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);

@@ -25,6 +25,9 @@ void quit(Client& client, int fd, const std::vector<std::string> &param)
 		}
 		++it;
 	}
+	// server.disconnectUser(fd);//somethiing like this
+	// Server::disconnectUser(fd);
+	close(fd);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 	// user.respond(msg); // optional: send to self
 }
