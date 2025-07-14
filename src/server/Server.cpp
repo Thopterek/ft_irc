@@ -368,6 +368,7 @@ Server::iter	Server::receivingData(iter it) {
 	buffer.resize(check_receive);
 	if (buffer.size() > 2) {
 		std::string::size_type line_feed = buffer.find("\r\n");
+		std::cout << BLUE << buffer << RESET << std::endl;
 		if (line_feed == std::string::npos)
 			clients[it->fd].buffer(buffer.data());
 		else {

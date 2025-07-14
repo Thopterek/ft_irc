@@ -28,7 +28,11 @@
 #include "Client.hpp"
 #include "Parser.hpp"
 #include "Channel.hpp"
-
+/*
+	colors for debbuging
+*/
+#define RESET   "\033[0m"
+#define BLUE    "\033[34m"
 /*
 	handler and actual signal flag
 	to shutdown server gracefully

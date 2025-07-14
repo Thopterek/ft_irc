@@ -207,16 +207,17 @@ void	Bot::setupSockets() {
 */
 void	Bot::setupMsgs() {
 	joined = "JOIN :#" + bot_name + "\r\n";
-	std::string line_one = " Hello! If you want to use the bot write: info\nits going to send information about file and its description\n";
-	std::string line_two = "if you want to start file transfer write: 'DCC GET " + bot_name + " " + file.first + "\r\n";
-	manual = "PRIVMSG #" + bot_name + line_one + line_two;
-	info_response = "PRIVMSG #" + bot_name + " file name:" + file.first + " and description: " + file.second + "\r\n";
+	std::string line_one = " :Hello! If you want to use the bot write: info\nits going to send information about file and its description";
+	std::string line_two = " :if you want to start file transfer write: 'DCC GET " + bot_name + " " + file.first;
+	manual_one = "PRIVMSG #" + bot_name + line_one + "\r\n";
+	manual_two = "PRIVMSG #" + bot_name + line_two + "\r\n";
+	info_response = "PRIVMSG #" + bot_name + " :file name:" + file.first + " and description: " + file.second + "\r\n";
 	dcc_get = "DCC GET " + bot_name + " " + file.first + "\r\n";
 	/*
 		DCC send should be changed so that it sends it to the target
 		after testing the actual thing after merge will be modified
 	*/
-	dcc_send = "PRIVMSG #" + bot_name + ":\\x01DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\r\n";
+	dcc_send = "PRIVMSG #" + bot_name + " :DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\r\n";
 }
 
 /*
@@ -386,15 +387,15 @@ Bot::iter	Bot::recvServer(iter it) {
 		for (auto print = buffer.begin(); print != buffer.end(); ++print)
 			std::cout << *print << std::flush;
 		if (buffer.size() > joined.size()) {
-			if (buffer.substr(buffer.size() - joined.size()) == joined)
+			if (buffer.find(joined) != std::string_view::npos)
 				sendManual();
 		}
 		if (buffer.size() > info.size()) {
-			if (buffer.substr(buffer.size() - info.size()) == info)
+			if (buffer.find(info) != std::string_view::npos)
 				sendInfoResponse();
 		}
 		if (buffer.size() > dcc_get.size()) {
-			if (buffer.substr(buffer.size() - dcc_get.size()) == dcc_get)
+			if (buffer.find(dcc_get) != std::string_view::npos)
 				DCCsend();
 		}
 	}
@@ -453,7 +454,7 @@ void	Bot::sendBinary(int fd) {
 	ssize_t total = 0;
 	ssize_t	check = 0;
 	while (total < static_cast<ssize_t>(buffer.size())) {
-		check = send(fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
+		check = send(fd, buffer.data() + total, buffer.size(), MSG_DONTWAIT);
 		if (check == -1) {
 			std::cerr << "Error: data couldn't be send properly" << std::endl;
 			return;
@@ -484,9 +485,13 @@ void	Bot::DCCsend() {
 }
 
 void	Bot::sendManual() {
-	int check = send(bot_fd, manual.c_str(), manual.size(), MSG_DONTWAIT);
+	int check = send(bot_fd, manual_one.c_str(), manual_one.size(), MSG_DONTWAIT);
 	if (check == -1) {
-		std::cerr << "Error: sending manual failed" << std::endl;
+		std::cerr << "Error: sending manual part one failed" << std::endl;
 		return ;
+	}
+	check = send(bot_fd, manual_two.c_str(), manual_two.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending manual part two failed" << std::endl;
 	}
 }
