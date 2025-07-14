@@ -1,6 +1,6 @@
 #include "../../inc/Channel.hpp"
 
-Channel::Channel(std::string name, unsigned int id) : id(id), name(name) {};
+Channel::Channel(std::string set_name, unsigned int set_id) : id(set_id), name(set_name) {};
 
 void Channel::addMember(unsigned int clientId)
 {

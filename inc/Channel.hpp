@@ -13,7 +13,7 @@ class Channel
 
 	public:
 		Channel() = delete;
-		Channel(std::string name, unsigned int id);
+		Channel(std::string set_name, unsigned int set_id);
 		Channel(const Channel &other) = default;
 		Channel(Channel &&other) = default;
 		Channel & operator=(const Channel &other) = default;

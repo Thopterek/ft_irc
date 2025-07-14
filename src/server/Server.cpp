@@ -359,6 +359,8 @@ Server::iter	Server::receivingData(iter it) {
 	else if (check_receive == 0) {
 		std::cout << "Client with fd: '" << it->fd << "' disconnected" << std::endl;
 		sendMsg("Goodbye and comeback soon", it->fd);
+		// clients[it->fd].buffer("QUIT\r\n");
+		// pars.parseAndDispatch(clients, it->fd);
 		if (close(it->fd) != 0)
 			runError("close in receivingData", it->fd);
 		buffer.clear();

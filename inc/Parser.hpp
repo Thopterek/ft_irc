@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   Parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: chuhlig <chuhlig@student.42.fr>            +#+  +:+       +#+        */
+/*   By: ndziadzi <ndziadzi@student.42heilbronn.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/24 17:14:45 by sudaniel          #+#    #+#             */
-/*   Updated: 2025/07/14 10:33:00 by chuhlig          ###   ########.fr       */
+/*   Updated: 2025/07/14 17:41:50 by ndziadzi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #include <unordered_map>
 #include <cctype>
 #include "User.hpp"
