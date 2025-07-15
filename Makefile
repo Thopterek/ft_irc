@@ -38,16 +38,16 @@ $(EXBOT): $(BOTOBJ)
 
 irssi-docker:
 	@docker ps > /dev/null 2>&1 || ( \
-		echo "🚀 Docker not running. Trying to start Docker Desktop..." && \
+		echo "🚀 Docker Desktop is not running. Trying to start Docker Desktop..." && \
 		open -a Docker && \
-		echo -n "⏳ Waiting for Docker to start " && \
+		printf "⏳ Waiting for Docker Desktop to start " && \
 		while ! docker ps > /dev/null 2>&1; do \
-			echo -n "."; \
+			printf "."; \
 			sleep 1; \
 		done; \
-		echo "\n✅ Docker is ready!" \
+		echo "\n✅ Docker Desktop is ready!" \
 	)
-	docker run -it --rm ubuntu bash -c "\
+	@docker run -it --rm ubuntu bash -c "\
 		apt update && \
 		apt install -y irssi && \
 		bash"
