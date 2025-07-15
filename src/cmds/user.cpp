@@ -15,7 +15,12 @@ void    user(Client& client, int fd, const std::vector<std::string> &param)
         user.handleErrors(Errors::ERR_NEEDMOREPARAMS, "USER");
         return ;
     }
-   if (!user.getUserName().empty())
+    if (param.at(3).size() < 2 || param.at(3).front() != ':')
+    {
+        user.respond("ERROR :No realname entered");
+        return ;
+    }
+    if (!user.getUserName().empty())
     {
         user.handleErrors(Errors::ERR_ALREADYREGISTERED, "USER");
         return ;

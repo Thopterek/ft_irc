@@ -37,10 +37,10 @@ std::vector<std::string>    Parser::tokenize(std::string_view msg)
         //check for trailing prefix
         if (params.front() == ':')
         {
-            std::string trailingPrefix = params.substr(1);
+            // std::string trailingPrefix = params.substr(1);
             std::string rest;
             std::getline(iss, rest);
-            tokens.push_back(trailingPrefix + rest);
+            tokens.push_back(params + rest);
             break ;
         }
         tokens.push_back(params);

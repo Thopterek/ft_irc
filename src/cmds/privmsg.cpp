@@ -42,16 +42,6 @@ static void messageChannel(const std::vector<std::string>& params,
     std::string channelName = params[0];
     Channel* channel = client.getChannelByName(channelName);
     std::cout << "Channels: " << std::endl;
-    // for (const auto& [channelName, channelPtr] : channels)
-    // {
-    //     std::cout << "Channel Name: " << channelName << ", Channel Pointer: " << channelPtr << std::endl;
-    // }
-    // auto    iter { channels.find(target) };
-    // if (iter == channels.end())
-    /*
-    * We need to know if the channel indeed exists but the user is not a member
-        or that it does not exit at all
-    */
     if (channel == NULL)
     {
         user.handleErrors(Errors::ERR_CANNOTSENDTOCHAN, channelName);
@@ -87,7 +77,8 @@ void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
         user.handleErrors(Errors::ERR_NORECIPIENT, "");
         return ;
     }
-    if (params.size() < 2 || params.at(1).empty())
+    if (params.size() < 2 || params.at(1).empty() 
+        || params.at(1).front() != ':')
     {
         user.handleErrors(Errors::ERR_NOTEXTTOSEND, "");
         return ;
