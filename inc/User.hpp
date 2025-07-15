@@ -22,7 +22,6 @@ class Channel;
 class   User
 {
     const int           m_fd;
-    // int                 m_channelCount { };
     RegStatus           m_status;
     const std::string   m_userIp, m_serverPwd;
     std::string         m_nickName, m_oldNick, m_userName, m_realName, m_hostName;

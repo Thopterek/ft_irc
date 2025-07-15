@@ -65,7 +65,10 @@ class	Server {
 		std::vector<struct pollfd> fresh;
 		Client	clients;
 		Parser	pars;
-		// Channel	channels;
+		/*
+			keeping server_time
+			and time between PINGs
+		*/
 	public:
 		Server() = delete;
 		Server(const Server &other) = delete;

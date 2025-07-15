@@ -123,7 +123,7 @@ class	Bot {
 		*/
 		void	sendBinary(int fd);
 		void	sendInfoResponse();
-		void	DCCsend();
+		void	DCCsend(std::string find_name);
 		void	sendManual();
 };
 

@@ -84,7 +84,7 @@ void    Parser::parseAndDispatch(Client &clients, int fd)
         if (!tokens.empty())
             dispatchCommand(clients, fd, tokens);
     }
-    catch (const std::out_of_range& e)
+    catch (const std::exception& e)
     {
         user.handleErrors(Errors::ERR_UNKNOWNCOMMAND, e.what());
     }

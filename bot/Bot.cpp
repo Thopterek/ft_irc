@@ -208,16 +208,11 @@ void	Bot::setupSockets() {
 void	Bot::setupMsgs() {
 	joined = "JOIN :#" + bot_name + "\r\n";
 	std::string line_one = " :Hello! If you want to use the bot write: info\nits going to send information about file and its description";
-	std::string line_two = " :if you want to start file transfer write: 'DCC GET " + bot_name + " " + file.first;
+	std::string line_two = " :if you want to start file transfer write msg to: " + bot_name + " DCC GET " + file.first;
 	manual_one = "PRIVMSG #" + bot_name + line_one + "\r\n";
 	manual_two = "PRIVMSG #" + bot_name + line_two + "\r\n";
-	info_response = "PRIVMSG #" + bot_name + " :file name:" + file.first + " and description: " + file.second + "\r\n";
-	dcc_get = "DCC GET " + bot_name + " " + file.first + "\r\n";
-	/*
-		DCC send should be changed so that it sends it to the target
-		after testing the actual thing after merge will be modified
-	*/
-	dcc_send = "PRIVMSG #" + bot_name + " :DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\r\n";
+	info_response = "PRIVMSG #" + bot_name + " :file name: " + file.first + " and description: " + file.second + "\r\n";
+	dcc_get = "DCC GET " + file.first;
 }
 
 /*
@@ -396,7 +391,7 @@ Bot::iter	Bot::recvServer(iter it) {
 		}
 		if (buffer.size() > dcc_get.size()) {
 			if (buffer.find(dcc_get) != std::string_view::npos)
-				DCCsend();
+				DCCsend(buffer);
 		}
 	}
 	buffer.clear();
@@ -472,16 +467,20 @@ void	Bot::sendInfoResponse() {
 	}
 }
 
-void	Bot::DCCsend() {
-	// const std::unordered_map<int, User*> user_info = getUsers();
-	// std::string name = user_info[it->fd].getuserName();
-	// std::cout << name << std::endl;
-	// int	test = it->fd;
-	int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
-	if (check == -1) {
-		std::cerr << "Error: sending DCCsend failed" << std::endl;
-		return ;
+void	Bot::DCCsend(std::string find_name) {
+	auto pos_col = find_name.find_first_of(":");
+	auto pos_end = find_name.find_first_of("!");
+	if (pos_col != std::string_view::npos && pos_end != std::string_view::npos) {
+		std::string user_name = find_name.substr(pos_col + 1, pos_end - pos_col - 1);
+		dcc_send = "PRIVMSG " + user_name + " :DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\r\n";
+		int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
+		if (check == -1) {
+			std::cerr << "Error: sending DCCsend failed" << std::endl;
+			return ;
+		}
 	}
+	else
+		std::cerr << "DCC send, couldn't find a name to sent the message to" << std::endl;
 }
 
 void	Bot::sendManual() {
