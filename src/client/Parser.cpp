@@ -20,8 +20,7 @@ Parser::Parser()
     // m_cmds.emplace("CAP", handleCap);
     m_cmds.emplace("TOPIC", topic);
     // m_cmds.emplace("WHO", handleWho);
-    // m_cmds.emplace("PING", handlePing);
-    // m_cmds.emplace("PONG", handlePong);
+    m_cmds.emplace("PING", ping);
 }
 
 std::vector<std::string>    Parser::tokenize(std::string_view msg)

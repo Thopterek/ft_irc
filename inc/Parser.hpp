@@ -42,6 +42,8 @@ void    pass(Client&, int, const std::vector<std::string>&);
 void    nick(Client&, int, const std::vector<std::string>&);
 void    user(Client&, int, const std::vector<std::string>&);
 void    privmsg(Client&, int, const std::vector<std::string>&);
+void    ping(Client&, int, const std::vector<std::string>&);
+
 /*
   channel side commands
 */
