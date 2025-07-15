@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <fstream>
 #include <string>
+#include <sstream>
 #include <csignal>
 #include <cstring>
 #include <cerrno>
@@ -67,7 +68,8 @@ class	Bot {
 			bot manual to help how it works
 			and how you can interact with it
 		*/
-		std::string joined, manual_one, manual_two, info_response, dcc_get, dcc_send;
+		std::string joined, manual_one, manual_two,
+		info_response, dcc_get, dcc_send, content;
 		const std::string info = "info\r\n";
 	public:
 		Bot();

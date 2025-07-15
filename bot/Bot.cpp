@@ -11,10 +11,13 @@ void	handler(int signum) {
 	Constructor made just for testing
 	prefilled information without checks
 */
-Bot::Bot(std::string name) : bot_name(name), file("img.png", "small png file"), file_type(FileType::BINARY),
+Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "a bomb of text on your private msg"), file_type(FileType::TEXT),
 server_port(6667), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
 	setupMsgs();
+	std::string file_path = "bot/files_to_transfer/" + file.first;
+	std::ifstream load(file_path);
+	content = std::string(std::istreambuf_iterator<char>(load), std::istreambuf_iterator<char>());
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
 }
 
@@ -98,22 +101,30 @@ void	Bot::setupName() {
 	to be used in XDCC type connection
 */
 void	Bot::setupFile() {
+	std::string file_path;
 	printRequest("pick a file in the 'bot/files_to_transfer'");
 	while (file.first == "" && g_shutdown == 0) {
 		checkEof();
 		std::getline(std::cin, file.first);
-		std::string file_path = "bot/files_to_transfer/" + file.first;
+		file_path = "bot/files_to_transfer/" + file.first;
 		std::ifstream actual(file_path);
 		if (actual.good() == false && g_shutdown == 0) {
 			printMistake("File not available");
 			file.first = "";
 		}
+		if (std::filesystem::is_regular_file(file_path) == false) {
+			printMistake("File type is wrong, choose another");
+			file.first = "";
+		}
 	}
-	/*
-		needed logic to setup the types of file
-		as for now file_type wasn't great for it
-	*/
-	file_type = FileType::BINARY;
+	auto	check = file.first.find(".txt");
+	if (check != std::string_view::npos) {
+		file_type = FileType::TEXT;
+		std::ifstream load(file_path);
+		content = std::string(std::istreambuf_iterator<char>(load), std::istreambuf_iterator<char>());
+	}
+	else
+		file_type = FileType::BINARY;
 	printRequest("write a description between 1 and 510 characters for it");
 	while (file.second == "" && g_shutdown == 0) {
 		checkEof();
@@ -207,12 +218,12 @@ void	Bot::setupSockets() {
 */
 void	Bot::setupMsgs() {
 	joined = "JOIN :#" + bot_name + "\r\n";
-	std::string line_one = " :Hello! If you want to use the bot write: info\nits going to send information about file and its description";
-	std::string line_two = " :if you want to start file transfer write msg to: " + bot_name + " DCC GET " + file.first;
+	std::string line_one = " :Hello! If you want to use the bot write info, it will show the usage";
+	std::string line_two = " :if you want to start file transfer write msg to " + bot_name + " DCC GET " + file.first;
 	manual_one = "PRIVMSG #" + bot_name + line_one + "\r\n";
 	manual_two = "PRIVMSG #" + bot_name + line_two + "\r\n";
 	info_response = "PRIVMSG #" + bot_name + " :file name: " + file.first + " and description: " + file.second + "\r\n";
-	dcc_get = "DCC GET " + file.first;
+	dcc_get = "DCC GET " + file.first + "\r\n";
 }
 
 /*
@@ -289,7 +300,7 @@ int	Bot::sendInitial() {
 		std::cerr << "Error: sending nick failed" << std::endl;
 		return (1);
 	}
-	std::string user = "USER " + bot_name + " 0 * " + bot_name + "\r\n";
+	std::string user = "USER " + bot_name + " 0 * :" + bot_name + "\r\n";
 	check = send(bot_fd, user.c_str(), user.size(), MSG_DONTWAIT);
 	if (check == -1) {
 		std::cerr << "Error: sending user failed" << std::endl;
@@ -472,11 +483,25 @@ void	Bot::DCCsend(std::string find_name) {
 	auto pos_end = find_name.find_first_of("!");
 	if (pos_col != std::string_view::npos && pos_end != std::string_view::npos) {
 		std::string user_name = find_name.substr(pos_col + 1, pos_end - pos_col - 1);
-		dcc_send = "PRIVMSG " + user_name + " :DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\r\n";
-		int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
-		if (check == -1) {
-			std::cerr << "Error: sending DCCsend failed" << std::endl;
-			return ;
+		if (file_type == FileType::BINARY) {
+			dcc_send = "PRIVMSG " + user_name + " :DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\r\n";
+			int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
+			if (check == -1) {
+				std::cerr << "Error: sending DCCsend failed" << std::endl;
+				return ;
+			}
+		}
+		else {
+			std::stringstream stream(content);
+			std::string part;
+			while (std::getline(stream, part)) {
+				dcc_send = "PRIVMSG " + user_name + " :" + part + "\r\n";
+				int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
+				if (check == -1) { 
+					std::cerr << "Error: sending DCCsend failed" << std::endl;
+					return ;
+				}
+			}
 		}
 	}
 	else
