@@ -83,11 +83,13 @@ void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
         user.handleErrors(Errors::ERR_NOTEXTTOSEND, "");
         return ;
     }
+    auto temp_params { params };
+    temp_params.at(1).erase(0, 1);
     if (isUser(params[0]))
-        directMessage(params, fd, client);
+        directMessage(temp_params, fd, client);
     else if (isChannel(params[0]))
-        messageChannel(params, fd, client);
+        messageChannel(temp_params, fd, client);
     else
-        user.handleErrors(Errors::ERR_NORECIPIENT, "");
+        user.handleErrors(Errors::ERR_NOSUCHNICK, params.at(0));
     std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
