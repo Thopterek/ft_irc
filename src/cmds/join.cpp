@@ -55,7 +55,9 @@ void join(Client& client, int fd, const std::vector<std::string> &param)
 	std::cout << "is addmember" << std::endl;
 	channel->addMember(user.getFd());
 
-	std::string msg = ":" + user.getSource() + " JOIN :" + channelName + "\r\n";
+	// std::string msg = ":" + user.getSource() + " JOIN :" + channelName + "\r\n";
+	std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " JOIN :" + channelName + "\r\n";
+
 	channel->broadcast(msg, user);
 	user.respond(msg);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;

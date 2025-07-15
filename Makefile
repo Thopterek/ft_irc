@@ -47,7 +47,7 @@ irssi-docker:
 		done; \
 		echo "\n✅ Docker Desktop is ready!" \
 	)
-	@docker run -it --rm ubuntu bash -c "\
+	@docker run -it --rm --name irssiclient ubuntu bash -c "\
 		apt update && \
 		apt install -y irssi && \
 		bash"
