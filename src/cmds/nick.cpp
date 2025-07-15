@@ -19,7 +19,7 @@ static Errors validate(Client& client, int fd, const std::string &nick)
     return (Errors::ERR_NONE);
 }
 
-void    nick(Client& client, int fd, const std::vector<std::string> &param)
+void    nick(Client& client, int fd, const std::vector<std::string>& param)
 {
     User&       user { client[fd] };
 
