@@ -52,8 +52,6 @@ std::vector<std::string>    Parser::tokenize(std::string_view msg)
 void    
 Parser::dispatchCommand(Client& client, int fd, const std::vector<std::string>& tokens)
 {
-    // User&   user { client[fd] };
-    
     if (tokens.empty())
         return ;
 
