@@ -5,7 +5,7 @@ CXXFLAGS = -Wall -Werror -Wextra -Wshadow -std=c++17 -g -Wfatal-errors
 SRCS =	src/main.cpp src/channel/Channel.cpp src/server/Server.cpp \
 		src/client/Client.cpp src/client/User.cpp \
 		src/client/Parser.cpp src/cmds/nick.cpp src/cmds/pass.cpp \
-		src/cmds/user.cpp src/cmds/privmsg.cpp src/cmds/ping.cpp \
+		src/cmds/user.cpp src/cmds/privmsg.cpp \
 		src/cmds/invite.cpp src/cmds/join.cpp src/cmds/kick.cpp \
 		src/cmds/mode.cpp src/cmds/part.cpp src/cmds/quit.cpp src/cmds/topic.cpp
 
@@ -35,6 +35,23 @@ bot: $(EXBOT)
 $(EXBOT): $(BOTOBJ)
 	$(COMP) $(CXXFLAGS) -o $(EXBOT) $(BOTOBJ)
 
+
+irssi-docker:
+	@docker ps > /dev/null 2>&1 || ( \
+		echo "🚀 Docker not running. Trying to start Docker Desktop..." && \
+		open -a Docker && \
+		echo -n "⏳ Waiting for Docker to start " && \
+		while ! docker ps > /dev/null 2>&1; do \
+			echo -n "."; \
+			sleep 1; \
+		done; \
+		echo "\n✅ Docker is ready!" \
+	)
+	docker run -it --rm ubuntu bash -c "\
+		apt update && \
+		apt install -y irssi && \
+		bash"
+
 cleanbot:
 	@rm -f $(BOTOBJ)
 
@@ -43,4 +60,4 @@ fcleanbot: cleanbot
 
 rebot: fcleanbot bot
 
-.PHONY: all re clean fclean bot rebot cleanbot fcleanbot
+.PHONY: all re clean fclean bot rebot cleanbot fcleanbot irssi-docker

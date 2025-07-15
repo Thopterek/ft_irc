@@ -15,15 +15,16 @@ void part(Client& client, int fd, const std::vector<std::string> &param)
 	Channel* channel = client.getChannelByName(channelName);
 	if (!channel)
 		return user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);
-
+	std::cout << "Channel found" << std::endl;
 	if (!channel->isMember(user.getFd()))
 		return user.handleErrors(Errors::ERR_NOTONCHANNEL, channelName);
-
+	std::cout << "User is member of channel" << std::endl;
 	std::string msg = ":" + user.getSource() + " PART :" + channelName + "\r\n";
 	channel->broadcast(msg, user);
 	// user.respond(msg);
-
+	std::string msg2 = ":" + user.getSource() + " PART " + channelName + " :" + "\r\n";
 	channel->removeMember(user.getFd());
+	user.respond(msg); 
 	if (channel->getMembers().empty())
 		client.deleteChannel(channelName);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
