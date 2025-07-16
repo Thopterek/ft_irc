@@ -26,6 +26,23 @@ void    Client::disconnect(int fd)
     auto    it = m_users.find(fd);
     if (it == m_users.end())
         return ;
+    User&   user = *(it->second);
+    const std::string msg = ":" + it->second->getSource() + " QUIT :" + "\r\n";
+    for (auto ref = getAllChannels().begin(); ref != getAllChannels().end();)
+	{
+		Channel* chan = ref->second.get();
+		if (chan->isMember(fd))
+		{
+			chan->broadcast(msg, user);
+			chan->removeMember(fd);
+			if (chan->getMembers().empty()) {
+				deleteChannel(chan->name);
+				ref = getAllChannels().erase(ref);
+				continue;
+			}
+		}
+		++ref;
+	}
     delete it->second;
     m_users.erase(it);
     --m_userCount;

@@ -304,12 +304,9 @@ void	Server::acceptingClient() {
 			std::string address = inet_ntoa(client_info.sin_addr);
 			struct hostent *client_host = gethostbyname(address.c_str());
 			std::string hostname = client_host->h_name;
-			// std::cout << "new client at: '" << address << "'" << std::endl;
 			std::cout << "\033[33m\033[1m" << "client with '" << client_fd << "' got accepted" << "\033[0m" << std::endl;
-			// std::cout << "his hostname is '" << hostname << "'" << std::endl;
 			fresh.push_back(new_client);
 			clients.connect(client_fd, address, hostname, password);
-			// sendMsg("Welcome to our IRC server", client_fd);
 		}
 	}
 }
@@ -350,6 +347,7 @@ Server::iter	Server::receivingData(iter it) {
 		std::cout << "double check it was: " << it->fd << std::endl;
 		runError("recv didn't proccess the message", it->fd);
 		recvErrno();
+		clients.disconnect(it->fd);
 		if (close(it->fd) != 0)
 			runError("close in receivingData", it->fd);
 		buffer.clear();
@@ -359,8 +357,7 @@ Server::iter	Server::receivingData(iter it) {
 	else if (check_receive == 0) {
 		std::cout << "Client with fd: '" << it->fd << "' disconnected" << std::endl;
 		sendMsg("Goodbye and comeback soon", it->fd);
-		// clients[it->fd].buffer("QUIT\r\n");
-		// pars.parseAndDispatch(clients, it->fd);
+		clients.disconnect(it->fd);
 		if (close(it->fd) != 0)
 			runError("close in receivingData", it->fd);
 		buffer.clear();
@@ -398,6 +395,7 @@ Server::iter	Server::receivingData(iter it) {
 */
 Server::iter	Server::removeError(iter it) {
 	std::cout << "Client with fd: '" << it->fd << "' had an error" << std::endl;
+	clients.disconnect(it->fd);
 	if (close(it->fd) != 0)
 		runError("Close on removeError failed", it->fd);
 	return (polling.erase(it));
@@ -409,6 +407,7 @@ Server::iter	Server::removeError(iter it) {
 */
 Server::iter	Server::removeInvalid(iter it) {
 	std::cout << "File descriptor was never opened or already closed: " << it->fd << std::endl;
+	clients.disconnect(it->fd);
 	return (polling.erase(it));
 }
 
@@ -428,6 +427,9 @@ Server::iter	Server::removeDisconnected(iter it) {
 	main loop of the server with polling data
 	the time out should never happen as -1 is set
 	other than that calling proper helper members
+	send if statement with time is to catch inactive
+	if they don't respond in time disconnect them
+	to test you need to quit a whole docker
 */
 void	Server::runServer() {
 	struct pollfd polling_pool;
@@ -435,11 +437,10 @@ void	Server::runServer() {
 	polling_pool.fd = server_fd;
 	polling_pool.events = POLLIN;
 	polling.push_back(polling_pool);
+	auto	start = std::chrono::system_clock::now();
 	while (g_shutdown == 0) {
-		int check_poll = poll(polling.data(), polling.size(), -1);
-		if (check_poll == 0)
-			runError("poll timed out before fd was ready", 0);
-		else if (check_poll == -1 && g_shutdown == 0)
+		int check_poll = poll(polling.data(), polling.size(), 1000);
+		if (check_poll == -1 && g_shutdown == 0)
 			runError("poll returned error, rtfm", 0);
 		else {
 			for (iter it = polling.begin(); it != polling.end();) {
@@ -457,6 +458,24 @@ void	Server::runServer() {
 					it = receivingData(it);
 				else
 					++it;
+			}
+			auto now = std::chrono::system_clock::now();
+			auto check_server_time = std::chrono::duration_cast<std::chrono::minutes>(now - start);
+			if (check_server_time.count() >= 1 && g_shutdown == 0) {
+				auto user_map = clients.getUsers();
+				for (auto user_check = user_map.begin(); user_check != user_map.end(); ++user_check) {
+					auto user_time = user_check->second->getTime();
+					auto check_user_time = std::chrono::duration_cast<std::chrono::minutes>(now - user_time);
+					if (check_user_time.count() >= 1 && g_shutdown == 0) {
+						std::string ping_msg = "PING " + getServerName() + "\r\n";
+						sendMsg(ping_msg, user_check->first);
+					}
+					if (check_user_time.count() >= 2) {
+						clients.disconnect(user_check->first);
+						close(user_check->first);
+					}
+				}
+				start = now;
 			}
 			for (const struct pollfd &saved : fresh)
 				polling.push_back(saved);

@@ -6,6 +6,7 @@
 #include <exception>
 #include <string_view>
 #include <map>
+#include <chrono>
 #include "Client.hpp"
 #include "Channel.hpp"
 
@@ -29,6 +30,7 @@ class   User
     mutable std::string m_buffer;
     static const std::string                m_serverName;
     std::map<Errors, std::string>  m_errors;
+    std::chrono::time_point<std::chrono::system_clock> m_time;
   public:
     User() = delete;
     explicit User(int, std::string_view, std::string_view, std::string_view);
@@ -55,6 +57,12 @@ class   User
     int                 getFd() const;
     RegStatus           getStatus() const;
     std::string         getSource() const;
+    /*
+      time manipulation used by the server
+      setter and getter that are called
+    */
+    void  setTime();
+    const std::chrono::time_point<std::chrono::system_clock> &getTime() const;
 
     void        buffer(std::string_view);
     void        handleErrors(Errors, const std::string&);

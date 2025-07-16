@@ -71,6 +71,7 @@ class	Bot {
 		std::string joined, manual_one, manual_two,
 		info_response, dcc_get, dcc_send, content;
 		const std::string info = "info\r\n";
+		const std::string ping = "PING";
 	public:
 		Bot();
 		Bot(std::string name);
@@ -127,6 +128,7 @@ class	Bot {
 		void	sendInfoResponse();
 		void	DCCsend(std::string find_name);
 		void	sendManual();
+		void	sendPong();
 };
 
 #endif

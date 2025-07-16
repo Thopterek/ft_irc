@@ -3,7 +3,6 @@
 
 void topic(Client& client, int fd, const std::vector<std::string> &param)
 {
-	std::cout << "\033[33m\033[1m" << "Command: Topic started" << "\033[0m" << std::endl;
 	User& user = client[fd];
     if (param.empty())
     {
@@ -17,10 +16,8 @@ void topic(Client& client, int fd, const std::vector<std::string> &param)
         user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);
         return;
     }
-    std::cout << "Channel found" << std::endl;
 	if (channel->isMember(user.getFd()) == false)
 		return user.handleErrors(Errors::ERR_USERONCHANNEL, channelName);
-    std::cout << "is found in member" << std::endl;
     if (param.size() == 1)
     {
         std::cout << "in on param" << std::endl;
@@ -41,5 +38,4 @@ void topic(Client& client, int fd, const std::vector<std::string> &param)
     std::string msg = ":" + user.getUserName() + " 332 " + user.getNickName() + " " + channelName + " :" + channel->getTopic() + "\r\n";
     channel->broadcast(msg, user);
     user.respond(msg);
-    std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }

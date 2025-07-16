@@ -339,7 +339,7 @@ void	Bot::acceptUser() {
 			new_client.events = POLLIN;
 			fresh.push_back(new_client);
 			std::cout << "USER CONNECTED TO THE BOT" << std::endl;
-			// sendBinary(client_fd);
+			sendBinary(client_fd);
 		}
 	}
 }
@@ -403,6 +403,10 @@ Bot::iter	Bot::recvServer(iter it) {
 		if (buffer.size() > dcc_get.size()) {
 			if (buffer.find(dcc_get) != std::string_view::npos)
 				DCCsend(buffer);
+		}
+		if (buffer.size() > ping.size()) {
+			if (buffer.find(ping) != std::string_view::npos)
+				sendPong();
 		}
 	}
 	buffer.clear();
@@ -518,4 +522,11 @@ void	Bot::sendManual() {
 	if (check == -1) {
 		std::cerr << "Error: sending manual part two failed" << std::endl;
 	}
+}
+
+void	Bot::sendPong() {
+	std::string pong = "PONG nsc-irc.local\r\n";
+	int check = send(bot_fd, pong.c_str(), pong.size(), MSG_DONTWAIT);
+	if (check == -1)
+		std::cerr << "Error: sending pong failed" << std::endl;
 }

@@ -37,6 +37,7 @@ User::User(int fd, std::string_view ip, std::string_view hostName, std::string_v
     m_errors.emplace(Errors::ERR_USERNOTINCHANNEL, ":They aren't on that channel");
     m_errors.emplace(Errors::ERR_NOTOPIC, ":No topic is set");
     m_errors.emplace(Errors::ERR_INVITEONLYCHAN, ":Cannot join channel (+i)");
+    setTime();
 }
 
 void    User::setNickName(std::string_view nickName)
@@ -136,6 +137,7 @@ std::string User::getSource() const
 
 void    User::buffer(std::string_view input)
 {
+    setTime();
     m_buffer += input;
 }
 
@@ -167,3 +169,10 @@ RegStatus User::getStatus() const
     return (m_status);
 }
 
+void    User::setTime() {
+    m_time = std::chrono::system_clock::now();
+}
+
+const std::chrono::time_point<std::chrono::system_clock> &User::getTime() const {
+    return (m_time);
+}
