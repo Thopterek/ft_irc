@@ -17,3 +17,5 @@ USER test * 0 real\r\n
 make irssi-docker
 
 also control n or p in irssi client to swap taps
+
+USER test * 0 :real name^M

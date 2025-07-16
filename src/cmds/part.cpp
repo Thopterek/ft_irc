@@ -12,41 +12,16 @@ void part(Client& client, int fd, const std::vector<std::string> &param)
 
 	std::string channelName = param[0];
 	std::string leavemsg = param.size() > 1 ? param[1] : user.getNickName();;
-	std::cout << "Channel Name?: " << channelName << std::endl;
 	Channel* channel = client.getChannelByName(channelName);
 	if (!channel)
 		return user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);
-	std::cout << "Channel found" << std::endl;
 	if (!channel->isMember(user.getFd()))
 		return user.handleErrors(Errors::ERR_NOTONCHANNEL, channelName);
-	std::cout << "User is member of channel" << std::endl;
-	// std::string msg = ":" + user.getSource() + " PART :" + channelName + "\r\n";
 	std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " PART " + channelName + " :" + leavemsg + "\r\n";
-	std::cout << "Broadcasting message: " << msg << std::endl;
 	channel->removeMember(user.getFd());
-	// user.respond(msg);
-	// std::string msg2 = ":" + user.getSource() + " PART " + channelName + " ; " + leavemsg + "\r\n";
-	// std::string msg2 = ":" + user.getSource() + " PART " + channelName + " :" + leavemsg + "\r\n";
-	std::string msg2 = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " PART " + channelName + " :" + leavemsg + "\r\n";
+	channel->broadcast(msg, user);
+	user.respond(msg);
 	if (channel->getMembers().empty())
 		client.deleteChannel(channelName);
-	channel->broadcast(msg, user);
-	user.respond(msg2);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
-
-// If a "Part Message" is given, this will be sent
-//    instead of the default message, the nickname.  This request is always
-//    granted by the server.
-
-
-//    PART #twilight_zone             ; Command to leave channel
-//                                    "#twilight_zone"
-
-//    PART #twilight_zone : bye            ; Command to leave channel with message i gues.
-//                                          "#twilight_zone"
-
-// 	boradcast									 :WiZ!jto@tolsun.oulu.fi PART #playzone :I lost
-// 												 ; User WiZ leaving channel
-// 												 "#playzone" with the message "I
-// 												 lost".
