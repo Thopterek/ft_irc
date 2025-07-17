@@ -31,6 +31,7 @@ void    nick(Client&, int, const std::vector<std::string>&);
 void    user(Client&, int, const std::vector<std::string>&);
 void    privmsg(Client&, int, const std::vector<std::string>&);
 void    ping(Client&, int, const std::vector<std::string>&);
+void    pong(Client&, int, const std::vector<std::string>&);
 
 /*
   channel side commands

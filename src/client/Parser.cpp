@@ -21,6 +21,7 @@ Parser::Parser()
     m_cmds.emplace("TOPIC", topic);
     // m_cmds.emplace("WHO", handleWho);
     m_cmds.emplace("PING", ping);
+    m_cmds.emplace("PONG", pong);
 }
 
 std::vector<std::string>    Parser::tokenize(std::string_view msg)

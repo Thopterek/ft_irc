@@ -1,15 +1,6 @@
 #include "../../inc/User.hpp"
 #include "../../inc/Parser.hpp"
 
-static void pong(User&  user, const std::string& token)
-{
-    const std::string serverSource { ":" + user.getServerName() };
-    const std::string   serverName { user.getServerName() };
-    const std::string response { serverSource + " PONG " +
-                                    serverName + " :" + token + "\r\n" };
-    user.respond(response);
-}
-
 void    ping(Client& client, int fd, const std::vector<std::string>& param)
 {
     User&   user { client[fd] };
@@ -23,6 +14,6 @@ void    ping(Client& client, int fd, const std::vector<std::string>& param)
         user.handleErrors(Errors::ERR_NEEDMOREPARAMS, "PING");
         return ;
     }
-    pong(user, param.at(0));
+    pong(client, fd, param);
 }
 
