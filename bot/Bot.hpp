@@ -126,6 +126,7 @@ class	Bot {
 		*/
 		void	sendBinary(int fd);
 		void	sendInfoResponse();
+		// void	convertIp(const std::string &ip);
 		void	DCCsend(std::string find_name);
 		void	sendManual();
 		void	sendPong();

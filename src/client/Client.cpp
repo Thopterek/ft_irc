@@ -27,7 +27,7 @@ void    Client::disconnect(int fd)
     if (it == m_users.end())
         return ;
     User&   user = *(it->second);
-    const std::string msg = ":" + it->second->getSource() + " QUIT :" + "\r\n";
+    const std::string msg = ":" + it->second->getSource() + " QUIT :Ping timeout: 120 seconds" + "\r\n";
     for (auto ref = getAllChannels().begin(); ref != getAllChannels().end();)
 	{
 		Channel* chan = ref->second.get();

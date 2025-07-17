@@ -7,7 +7,7 @@ SRCS =	src/main.cpp src/channel/Channel.cpp src/server/Server.cpp \
 		src/client/Parser.cpp src/cmds/nick.cpp src/cmds/pass.cpp \
 		src/cmds/user.cpp src/cmds/privmsg.cpp \
 		src/cmds/invite.cpp src/cmds/join.cpp src/cmds/kick.cpp src/cmds/ping.cpp \
-		src/cmds/mode.cpp src/cmds/part.cpp src/cmds/quit.cpp src/cmds/ping.cpp\
+		src/cmds/mode.cpp src/cmds/part.cpp src/cmds/quit.cpp src/cmds/pong.cpp\
 		src/cmds/topic.cpp
 
 

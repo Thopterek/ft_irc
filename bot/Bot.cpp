@@ -383,7 +383,7 @@ Bot::iter	Bot::recvServer(iter it) {
 	buffer.resize(512);
 	int check = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
 	if (check < 1) {
-		std::cerr << "SERVER FAILED" << std::endl;
+		std::cerr << "SERVER FAILED or just closed" << std::endl;
 		close(it->fd);
 		bot_fd = -1;
 		return (polling.erase(it));
@@ -482,13 +482,17 @@ void	Bot::sendInfoResponse() {
 	}
 }
 
+// void	Bot::convertIp(const std::string &ip) {
+// 	std::istringstream iss(ip);
+// }
+
 void	Bot::DCCsend(std::string find_name) {
 	auto pos_col = find_name.find_first_of(":");
 	auto pos_end = find_name.find_first_of("!");
 	if (pos_col != std::string_view::npos && pos_end != std::string_view::npos) {
 		std::string user_name = find_name.substr(pos_col + 1, pos_end - pos_col - 1);
 		if (file_type == FileType::BINARY) {
-			dcc_send = "PRIVMSG " + user_name + " :DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\r\n";
+			dcc_send = "PRIVMSG " + user_name + " :\x01" + " DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\x01\r\n";
 			int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
 			if (check == -1) {
 				std::cerr << "Error: sending DCCsend failed" << std::endl;
