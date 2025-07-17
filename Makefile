@@ -51,7 +51,7 @@ start-docker-desktop-mac:
 irssi-docker: start-docker-desktop-mac
 	@if [ ! "$$(docker ps -a --format '{{.Names}}' | grep -w irssi-dev)" ]; then \
 		echo "📦 Creating new irssi-dev container..."; \
-		docker run -dit --name irssi-dev ubuntu bash -c "apt update && apt install -y irssi && bash"; \
+		docker run -dit --name irssi-dev ubuntu bash -c "apt update && apt install -y irssi && mkdir -p root/irc-client && bash"; \
 	else \
 		echo "✅ irssi-dev container already exists."; \
 	fi
