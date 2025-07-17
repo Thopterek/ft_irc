@@ -12,7 +12,9 @@ void mode(Client& client, int fd, const std::vector<std::string> &param)
 
 	const std::string& channelName = param[0];
 	const std::string& modes = param[1];
-
+	for(auto it = param.begin(); it != param.end(); ++it) {
+		std::cout << *it << " ";
+	}
 	Channel* channel = client.getChannelByName(channelName);
 	if (!channel)
 		return user.handleErrors(Errors::ERR_NOSUCHCHANNEL, channelName);
@@ -32,18 +34,18 @@ void mode(Client& client, int fd, const std::vector<std::string> &param)
 			case 't': channel->setTopicProtection(set); break;
 			case 'k':
 				if (set && param.size() > 2) channel->setPassword(param[2]);
-				else if (!set) channel->setPassword(""); // Passwort löschen
+				else if (!set) channel->setPassword("");
 				break;
 			case 'l':
 				if (set && param.size() > 2) channel->setLimit(std::atoi(param[2].c_str()));
-				else if (!set) channel->setLimit(0); // Limit deaktivieren
+				else if (!set) channel->setLimit(0);
 				break;
 			default:
-				return user.handleErrors(Errors::ERR_UNKNOWNMODE, "MODE"/*std::string(1, c)*/);
+				return user.handleErrors(Errors::ERR_UNKNOWNMODE, "MODE");/*std::string(1, c)*/
 		}
 	}
-
-	std::string msg = ":" + user.getSource() + " MODE " + channelName + " +" + modes + "\r\n";
+	std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " MODE " + channelName + " " + modes + "\r\n";
 	channel->broadcast(msg, user);
+	user.respond(msg);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }

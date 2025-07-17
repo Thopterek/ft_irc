@@ -6,10 +6,8 @@ void kick(Client& client, int fd, const std::vector<std::string> &param)
 {
 	std::cout << "\033[33m\033[1m" << "Command: KICK started" << "\033[0m" << std::endl;
 	User& user = client[fd];
-
 	if (param.size() < 2)
 		return user.handleErrors(Errors::ERR_NEEDMOREPARAMS, "KICK");
-
 	const std::string& channelName = param[0];
 	const std::string& targetNick = param[1];
 
@@ -33,10 +31,10 @@ void kick(Client& client, int fd, const std::vector<std::string> &param)
 
 	std::string msg = ":" + user.getSource() + " KICK " + channelName + " " + targetNick + " :Kicked\r\n";
 	channel->broadcast(msg, user);
-	// target->respond(msg);
-
 	channel->kick(it->first);
 	if (channel->getMembers().empty())
 		client.deleteChannel(channelName);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
+
+//need to update message and test it

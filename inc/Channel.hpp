@@ -32,7 +32,8 @@ class Channel
 
 		void addMember(unsigned int client);
 		void removeMember(unsigned int clientId);
-		std::string inviteMember(unsigned int clientId);
+		//std::string inviteMember(unsigned int clientId);
+		void inviteMember(unsigned int clientId);
 		std::map<unsigned int, bool> & getMembers();
 	
 		void kick(unsigned int clientId);

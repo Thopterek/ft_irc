@@ -7,14 +7,14 @@ void quit(Client& client, int fd, const std::vector<std::string> &param)
 	std::cout << "\033[33m\033[1m" << "Command: QUIT started" << "\033[0m" << std::endl;
 	User& user = client[fd];
 
-	const std::string reason = param.empty() ? "Client Quit" : param[0];
-	const std::string msg = ":" + user.getSource() + " QUIT :" + reason + "\r\n";
-
+	const std::string reason = param.empty() ? " " : param[0];
+	std::cout << reason << std::endl;
 	for (auto it = client.getAllChannels().begin(); it != client.getAllChannels().end();)
 	{
 		Channel* chan = it->second.get();
 		if (chan->isMember(user.getFd()))
 		{
+			std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " QUIT :" + it->first + reason + "\r\n";
 			chan->broadcast(msg, user);
 			chan->removeMember(user.getFd());
 			if (chan->getMembers().empty()) {
@@ -25,15 +25,6 @@ void quit(Client& client, int fd, const std::vector<std::string> &param)
 		}
 		++it;
 	}
-	// server.disconnectUser(fd);//somethiing like this
-	// Server::disconnectUser(fd);
 	close(fd);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
-	// user.respond(msg); // optional: send to self
 }
-
-
-// QUIT :Gone to have lunch        ; Preferred message format.
-
-//    :syrk!kalt@millennium.stealth.net QUIT :Gone to have lunch ; User
-//                                    syrk has quit IRC to have lunch.

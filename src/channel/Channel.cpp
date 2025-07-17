@@ -24,19 +24,12 @@ void Channel::addMember(unsigned int clientId)
 void	Channel::removeMember(unsigned int clientId)
 {
 	_members[clientId] = false;
+	_invites[clientId] = false;
 }
 
-std::string Channel::inviteMember(unsigned int clientId)
+void	Channel::inviteMember(unsigned int clientId)
 {
-	if (!clientId)
-		return "Invalid client ID.";
-	if (isMember(clientId))
-		return "Client is already a member.";
-	if (isInvited(clientId))
-		return "Client is already invited.";
 	_invites[clientId] = true;
-	_kicked[clientId] = false;
-	return "You got invited";
 }
 
 
