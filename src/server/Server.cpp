@@ -394,7 +394,6 @@ Server::iter	Server::receivingData(iter it) {
 	and removing unsafe connections
 */
 Server::iter	Server::removeError(iter it) {
-	std::cout << "Client with fd: '" << it->fd << "' had an error" << std::endl;
 	clients.disconnect(it->fd);
 	if (close(it->fd) != 0)
 		runError("Close on removeError failed", it->fd);
@@ -406,7 +405,6 @@ Server::iter	Server::removeError(iter it) {
 	most likely should never happen, just for poll check
 */
 Server::iter	Server::removeInvalid(iter it) {
-	std::cout << "File descriptor was never opened or already closed: " << it->fd << std::endl;
 	clients.disconnect(it->fd);
 	return (polling.erase(it));
 }
@@ -416,7 +414,6 @@ Server::iter	Server::removeInvalid(iter it) {
 	calling Client side handlers
 */
 Server::iter	Server::removeDisconnected(iter it) {
-	std::cout << "Client with: " << it->fd << " has disconnected" << std::endl;
 	clients.disconnect(it->fd);
 	if (close(it->fd) != 0)
 		runError("Close on disconnection failed", it->fd);
@@ -472,7 +469,8 @@ void	Server::runServer() {
 					}
 					if (check_user_time.count() >= 2) {
 						clients.disconnect(user_check->first);
-						close(user_check->first);
+						if (close(user_check->first) != 0)
+							std::cerr << "Error: close on client in timeout failed" << std::endl;
 					}
 				}
 				start = now;

@@ -11,13 +11,17 @@ void	handler(int signum) {
 	Constructor made just for testing
 	prefilled information without checks
 */
-Bot::Bot(std::string name) : bot_name(name), file("ffy.txt", "a bomb of text on your private msg"), file_type(FileType::TEXT),
+Bot::Bot(std::string name) : bot_name(name), file("img.png", "a bomb of text on your private msg"), file_type(FileType::BINARY),
 server_port(6667), server_password("123"), server_ip("10.12.4.8"), bot_fd(-1), connect_to_bot_fd(-1), polling(), fresh() {
 	setupSockets();
 	setupMsgs();
-	std::string file_path = "bot/files_to_transfer/" + file.first;
-	std::ifstream load(file_path);
-	content = std::string(std::istreambuf_iterator<char>(load), std::istreambuf_iterator<char>());
+	if (file_type == FileType::TEXT) {
+		std::string file_path = "bot/files_to_transfer/" + file.first;
+		std::ifstream load(file_path);
+		content = std::string(std::istreambuf_iterator<char>(load), std::istreambuf_iterator<char>());
+	}
+	else 
+		content = "no_content";
 	std::cout << "\033[31m\033[1m" << "PREFILLED TEST CONSTRUCTOR USED, ONLY FOR DEBUGGING" << "\033[0m" << std::endl;
 }
 
@@ -107,7 +111,8 @@ void	Bot::setupFile() {
 		checkEof();
 		std::getline(std::cin, file.first);
 		file_path = "bot/files_to_transfer/" + file.first;
-		std::ifstream actual(file_path);
+		std::ifstream actual(file_path, std::ios::binary | std::ios::ate);
+		file_size = actual.tellg();
 		if (actual.good() == false && g_shutdown == 0) {
 			printMistake("File not available");
 			file.first = "";
@@ -122,6 +127,8 @@ void	Bot::setupFile() {
 		file_type = FileType::TEXT;
 		std::ifstream load(file_path);
 		content = std::string(std::istreambuf_iterator<char>(load), std::istreambuf_iterator<char>());
+		std::cout << "\033[31m\033[1m" << "WARNING FOR FILE FORMAT" << "\033[34m" << std::endl;
+		std::cout << "Every file with .txt is reinterpreted and its content you get in message" << std::endl;
 	}
 	else
 		file_type = FileType::BINARY;
@@ -202,14 +209,14 @@ void	Bot::setupSockets() {
 	struct sockaddr_in address;
 	memset(&address, 0, sizeof(address));
 	address.sin_family = AF_INET, address.sin_addr.s_addr = INADDR_ANY;
-	address.sin_port = htons(static_cast<uint16_t>(connect_to_bot_fd));
+	address.sin_port = htons(static_cast<uint16_t>(bot_listen_port));
 	check = bind(connect_to_bot_fd, reinterpret_cast<struct sockaddr*>(&address), sizeof(address));
 	if (check == -1)
 		cleanExit("bind for the connect_to_bot_fd failed in setupSockets");
 	check = listen(connect_to_bot_fd, SOMAXCONN);
 	if (check == -1)
 		cleanExit("listen for connect_to_bot_fd failed in setupSockets");
-	std::cout << "\033[33m\033[1m" << "Bot waits for connection at port: " << "\033[0m" << connect_to_bot_fd << std::endl;
+	std::cout << "\033[33m\033[1m" << "Bot waits for connection at port: " << "\033[0m" << bot_listen_port << std::endl;
 }
 
 /*
@@ -219,7 +226,7 @@ void	Bot::setupSockets() {
 void	Bot::setupMsgs() {
 	joined = "JOIN :#" + bot_name + "\r\n";
 	std::string line_one = " :Hello! If you want to use the bot write info, it will show the usage";
-	std::string line_two = " :if you want to start file transfer write msg to " + bot_name + " DCC GET " + file.first;
+	std::string line_two = " :if you want to start file transfer (or get content of it) write msg to " + bot_name + " DCC GET " + file.first;
 	manual_one = "PRIVMSG #" + bot_name + line_one + "\r\n";
 	manual_two = "PRIVMSG #" + bot_name + line_two + "\r\n";
 	info_response = "PRIVMSG #" + bot_name + " :file name: " + file.first + " and description: " + file.second + "\r\n";
@@ -336,10 +343,10 @@ void	Bot::acceptUser() {
 			struct pollfd new_client;
 			memset(&new_client, 0, sizeof(new_client));
 			new_client.fd = client_fd;
-			new_client.events = POLLIN;
+			new_client.events = POLLIN | POLLOUT;
 			fresh.push_back(new_client);
-			std::cout << "USER CONNECTED TO THE BOT" << std::endl;
-			sendBinary(client_fd);
+			std::cout << "\033[33m\033[1m" << "Client connected to bot through DCC"  << "\033[0m" << std::endl;
+			std::cout << "File transfer will start soon" << std::endl;
 		}
 	}
 }
@@ -366,10 +373,6 @@ Bot::iter	Bot::recvUser(iter it) {
 		it = polling.erase(it);
 		return (it);
 	}
-	buffer.resize(check_receive);
-	for (auto print = buffer.begin(); print != buffer.end(); ++print)
-		std::cout << *print << std::flush;
-	std::cout << " <- from client: " << it->fd << std::endl;
 	buffer.clear();
 	return (++it);
 }
@@ -383,8 +386,10 @@ Bot::iter	Bot::recvServer(iter it) {
 	buffer.resize(512);
 	int check = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
 	if (check < 1) {
-		std::cerr << "SERVER FAILED or just closed" << std::endl;
-		close(it->fd);
+		std::cout << "\033[31m\033[1m" << "WARNING KEEP BOT RUNNING IF TRANSFER IS ONGOING" << "\033[34m" << std::endl;
+		std::cerr << "Server failed or closed while bot was running" << std::endl;
+		if (close(it->fd) != 0)
+			std::cerr << "Error: close on server " << it->fd << " failed" << std::endl;
 		bot_fd = -1;
 		return (polling.erase(it));
 	}
@@ -435,6 +440,12 @@ void	Bot::runBot() {
 					it = recvUser(it);
 				else if (it->fd == bot_fd && (it->revents & POLLIN) && g_shutdown == 0)
 					it = recvServer(it);
+				else if (it->fd != connect_to_bot_fd && it-> fd != bot_fd && (it->revents & POLLOUT) && g_shutdown == 0) {
+					sendBinary(it->fd);
+					if (close(it->fd) != 0)
+						std::cerr << "Error: close on client " << it->fd << " failed" << std::endl;
+					it = polling.erase(it);
+				}
 				else
 					++it;
 			}
@@ -460,18 +471,21 @@ void	Bot::sendBinary(int fd) {
 	load_file.seekg(0, std::ios::beg);
 	std::vector<char>	buffer;
 	buffer.reserve(size);
-	buffer.insert(buffer.begin(), std::istream_iterator<char>(load_file), std::istream_iterator<char>(load_file));
+	auto	begin_iter = std::istream_iterator<char>(load_file);
+	buffer.insert(buffer.begin(), begin_iter, std::istream_iterator<char>());
 	ssize_t total = 0;
 	ssize_t	check = 0;
 	while (total < static_cast<ssize_t>(buffer.size())) {
-		check = send(fd, buffer.data() + total, buffer.size(), MSG_DONTWAIT);
-		if (check == -1) {
+		check = send(fd, buffer.data() + total, buffer.size() - total, MSG_DONTWAIT);
+		if (check == -1 && errno != EAGAIN) {
 			std::cerr << "Error: data couldn't be send properly" << std::endl;
 			return;
 		}
+		else if (check > 0)
+			std::cout << "Till now we sent: " << check << " bytes of data" << std::endl;
 		total += check;
 	}
-	std::cout << "File send properly to client: " << fd << std::endl;
+	std::cout << "\033[32m" << "File send properly to client: " << "\033[0m" << fd << std::endl;
 }
 
 void	Bot::sendInfoResponse() {
@@ -482,9 +496,21 @@ void	Bot::sendInfoResponse() {
 	}
 }
 
-// void	Bot::convertIp(const std::string &ip) {
-// 	std::istringstream iss(ip);
-// }
+uint32_t	Bot::convertIp(const std::string &ip) {
+	std::istringstream iss(ip);
+	std::string part;
+	std::vector<int> bytes;
+
+	while (std::getline(iss, part, '.')) {
+		int byte = std::stoi(part);
+		if (byte < 0 || byte > 255) {
+			std::cout << "Ip conversion failed, we wish but we can't" << std::endl;
+			return (0);
+		}
+		bytes.push_back(byte);
+	}
+	return (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | bytes[3];
+}
 
 void	Bot::DCCsend(std::string find_name) {
 	auto pos_col = find_name.find_first_of(":");
@@ -492,7 +518,8 @@ void	Bot::DCCsend(std::string find_name) {
 	if (pos_col != std::string_view::npos && pos_end != std::string_view::npos) {
 		std::string user_name = find_name.substr(pos_col + 1, pos_end - pos_col - 1);
 		if (file_type == FileType::BINARY) {
-			dcc_send = "PRIVMSG " + user_name + " :\x01" + " DCC SEND " + file.first + " " + server_ip + " " + std::to_string(connect_to_bot_fd) + "\x01\r\n";
+			dcc_send = "PRIVMSG " + user_name + " :\x01" + "DCC SEND " + file.first + " " +
+			std::to_string(convertIp(server_ip)) + " " + std::to_string(bot_listen_port) + " " + std::to_string(file_size) + "\x01\r\n";
 			int check = send(bot_fd, dcc_send.c_str(), dcc_send.size(), MSG_DONTWAIT);
 			if (check == -1) {
 				std::cerr << "Error: sending DCCsend failed" << std::endl;

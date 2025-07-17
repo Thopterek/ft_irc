@@ -72,6 +72,8 @@ class	Bot {
 		info_response, dcc_get, dcc_send, content;
 		const std::string info = "info\r\n";
 		const std::string ping = "PING";
+		const int bot_listen_port = 5555;
+		std::streamsize file_size;
 	public:
 		Bot();
 		Bot(std::string name);
@@ -126,7 +128,7 @@ class	Bot {
 		*/
 		void	sendBinary(int fd);
 		void	sendInfoResponse();
-		// void	convertIp(const std::string &ip);
+		uint32_t	convertIp(const std::string &ip);
 		void	DCCsend(std::string find_name);
 		void	sendManual();
 		void	sendPong();

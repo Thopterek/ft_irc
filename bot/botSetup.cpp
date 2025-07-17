@@ -19,8 +19,8 @@ static void welcome() {
 int	main(void) {
 	std::signal(SIGINT, handler);
 	welcome();
-	// Bot	marvin;
-	Bot	marvin("Marvin");
+	Bot	marvin;
+	// Bot	marvin("Marvin");
 	marvin.runBot();
 	return (0);
 }
