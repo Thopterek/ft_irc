@@ -98,7 +98,13 @@ Channel* Client::createChannel(const std::string& name, unsigned int clientId) {
 }
 
 void Client::deleteChannel(const std::string& name) {
+    auto it = channels.find(name);
+    if (it == channels.end()) {
+        return;
+    }
+    // delete it->second.get();
     channels.erase(name); // unique_ptr sorgt automatisch für delete
+    
 }
 
 std::unordered_map<std::string, std::unique_ptr<Channel>>& Client::getAllChannels() {

@@ -25,6 +25,7 @@ void	Channel::removeMember(unsigned int clientId)
 {
 	_members[clientId] = false;
 	_invites[clientId] = false;
+	_members.erase(clientId);
 }
 
 void	Channel::inviteMember(unsigned int clientId)
