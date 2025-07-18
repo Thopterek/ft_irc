@@ -89,6 +89,7 @@ class   Client
     Channel* createChannel(const std::string& name, unsigned int clientId);
     void deleteChannel(const std::string& name);
     std::unordered_map<std::string, std::unique_ptr<Channel>>& getAllChannels();
+    std::string  getChannelNames(std::vector<std::string>& name) const;
 };
 
 #endif

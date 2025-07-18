@@ -57,9 +57,15 @@ void    nick(Client& client, int fd, const std::vector<std::string>& param)
     for (auto& member : channels)
     {
         Channel*    channel { member.second.get() };
+        // std::string channel_name = channels[member.first]->getChannelName();
         if (channel->isMember(user.getFd()))
-            channel->broadcast(user.getSource() + "NICK :" + newNick, user);
+        {
+            std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " NICK " + newNick + "\r\n";
+            channel->broadcast(msg, user);
+    
+        }
     }
+    //user.respond(msg);
     user.setOldNick(user.getNickName());
     user.setNickName(newNick);
 }
