@@ -7,8 +7,9 @@ void    user(Client& client, int fd, const std::vector<std::string> &param)
     
     if (user.getNickName().empty())
     {
-        user.respond("ERROR :You must send NICK command before USER.\r\n");
-        return ;
+        user.setStatus(RegStatus::ATTEMPTED);
+        // user.respond("ERROR :You must send NICK command before USER.\r\n");
+        // return ;
     }
     if (param.size() != 4 || param.front().empty())
     {
@@ -29,12 +30,14 @@ void    user(Client& client, int fd, const std::vector<std::string> &param)
     user.setHostName(param.at(1));
     user.setUserServerName(param.at(2));
     user.setRealName(param.at(3));
-    user.setStatus(RegStatus::REGISTERED);
-    /*
-        NEVER TOUCH THIS LINE
-        PLEASE FOR THE LOVE OF GOD AND ALL THAT IS HOLLY
-        STOP IT AND LEAVE IT
-    */
-    const std::string&  welcome { user.getNickName() + " :Welcome to the NCS IRC network, " };
-    user.respond(":" + user.getServerName() + " 001 " + welcome + user.getSource() + "\r\n");
+    if (user.getStatus() != RegStatus::ATTEMPTED) {
+        user.setStatus(RegStatus::REGISTERED);
+        /*
+            NEVER TOUCH THIS LINE
+            PLEASE FOR THE LOVE OF GOD AND ALL THAT IS HOLLY
+            STOP IT AND LEAVE IT
+        */
+        const std::string&  welcome { user.getNickName() + " :Welcome to the NCS IRC network, " };
+        user.respond(":" + user.getServerName() + " 001 " + welcome + user.getSource() + "\r\n");
+    }
 }

@@ -3,13 +3,17 @@
 
 static Errors validate(Client& client, int fd, const std::string &nick)
 {
+    std::cout << "ARE WE SEGFAULTING HERE?" << std::endl;
     if (nick.empty())
         return (Errors::ERR_NONICKNAMEGIVEN);
+    std::cout << "after the nick.empty" << std::endl;
     if (!std::isalpha(nick.front()) || nick.size() > 9)
         return (Errors::ERR_ERRONEUSNICKNAME);
+    std::cout << "are we after alpha?" << std::endl;
     for (auto c : nick)
         if (c == ' ' || c == ',' || c == '*' || c == '?' || c == '!' || c == '@')
             return (Errors::ERR_ERRONEUSNICKNAME);
+    std::cout << "we should never be here" << std::endl;
     const std::string capitalized { client.ircCapitalize(nick) };
     const std::unordered_map<int, User*> users { client.getUsers() };
     for (auto user : users)
@@ -22,21 +26,42 @@ static Errors validate(Client& client, int fd, const std::string &nick)
 void    nick(Client& client, int fd, const std::vector<std::string>& param)
 {
     User&       user { client[fd] };
-
-    if (user.getStatus() == RegStatus::CONNECTED)
-    {
-        user.respond("ERROR :You must send PASS command before registering.");
-        return ;
-    }
     if (param.empty())
     {
         user.handleErrors(Errors::ERR_NONICKNAMEGIVEN, "");
         return ;
     }
+    if (user.getStatus() == RegStatus::ATTEMPTED)
+    {
+        std::cout << "DID WE GET HERE?" << std::endl;
+        Errors err { validate(client, fd, param.front()) };
+        std::cout << "are we passed the validation" << std::endl;
+        if (err == Errors::ERR_NONE) {
+            std::cout << "did we go to err_none" << std::endl;
+            user.setStatus(RegStatus::REGISTERED);
+            user.setNickName(param.front());
+            const std::string&  welcome { user.getNickName() + " :Welcome to the NCS IRC network, " };
+            user.respond(":" + user.getServerName() + " 001 " + welcome + user.getSource() + "\r\n");
+            return ;
+        }
+        else {
+            // user.setStatus(RegStatus::CONNECTED);
+            std::cout << "ARE WE GOING INTO ERROR HANDLING?" << std::endl;
+            if (err == Errors::ERR_NONICKNAMEGIVEN)
+                user.handleErrors(err, "");
+            else
+                user.handleErrors(err, param.front());
+        }
+    }
+    if (user.getStatus() == RegStatus::CONNECTED)
+    {
+        user.respond("ERROR :You must send PASS command before registering.");
+        return ;
+    }
 
     const std::string&  newNick { param.front() };
     Errors err { validate(client, fd, newNick) };
-
+    std::cout << "This is what is in newNick-> " << newNick << std::endl; 
     if (err != Errors::ERR_NONE)
     {
         if (err == Errors::ERR_NONICKNAMEGIVEN)

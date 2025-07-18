@@ -153,8 +153,11 @@ User::buildMsg(Errors errCode, const std::string& cmd, const std::string& errMsg
     std::string serverPrefix { ":" + getServerName()};
     std::string errorCode {std::to_string(static_cast<int>(errCode))};
     const std::string&  temp { cmd.empty() ? " " : " " + cmd + " " };
-
-    serverPrefix += (" " + errorCode + " " + getNickName());
+    std::string tmp = getNickName();
+    if (tmp.empty())
+        tmp = "*";
+    serverPrefix += (" " + errorCode + " " + tmp);
+    std::cout << serverPrefix + temp + errMsg << std::endl;
     return (serverPrefix + temp + errMsg + "\r\n");
 }
 

@@ -15,7 +15,8 @@ enum class RegStatus
 { 
     CONNECTED,
     REGISTERING,
-    REGISTERED
+    REGISTERED,
+    ATTEMPTED
 };
 
 class Channel;
