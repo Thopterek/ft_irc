@@ -128,7 +128,7 @@ void	Bot::setupFile() {
 		std::ifstream load(file_path);
 		content = std::string(std::istreambuf_iterator<char>(load), std::istreambuf_iterator<char>());
 		std::cout << "\033[31m\033[1m" << "WARNING FOR FILE FORMAT" << "\033[34m" << std::endl;
-		std::cout << "Every file with .txt is reinterpreted and its content you get in message" << std::endl;
+		std::cout << "Every file with .txt is reinterpreted and its content you get in the private message" << std::endl;
 	}
 	else
 		file_type = FileType::BINARY;
@@ -229,7 +229,7 @@ void	Bot::setupMsgs() {
 	std::string line_two = " :if you want to start file transfer (or get content of it) write msg to " + bot_name + " DCC GET " + file.first;
 	manual_one = "PRIVMSG #" + bot_name + line_one + "\r\n";
 	manual_two = "PRIVMSG #" + bot_name + line_two + "\r\n";
-	info_response = "PRIVMSG #" + bot_name + " :file name: " + file.first + " and description: " + file.second + "\r\n";
+	info_response = "PRIVMSG #" + bot_name + " :file name: " + file.first + " and description: " + file.second + ", to accept file write /dcc get" + "\r\n";
 	dcc_get = "DCC GET " + file.first + "\r\n";
 }
 
