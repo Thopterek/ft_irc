@@ -23,13 +23,24 @@ void Channel::addMember(unsigned int clientId)
 
 void	Channel::removeMember(unsigned int clientId)
 {
+	std::cout << "the beginning of remove member" << std::endl;
+	auto check_member = _members.find(clientId);
+	if (check_member == _members.end())
+		return ;
 	_members[clientId] = false;
+	// auto check_invite = _invites.find(clientId);
+	// if (check_invite == _invites.end())
+	// 	return ;
 	_invites[clientId] = false;
-	_members.erase(clientId);
+	// _members.erase(clientId);
+	std::cout << "THE END OF REMOVE MEMBER" << std::endl;
 }
 
 void	Channel::inviteMember(unsigned int clientId)
 {
+	auto check_invite = _invites.find(clientId);
+	if (check_invite == _invites.end())
+		return ;
 	_invites[clientId] = true;
 }
 
@@ -38,11 +49,20 @@ void Channel::kick(unsigned int clientId)
 {
 	removeMember(clientId);
 	_kicked[clientId] = true;
+	auto check_invite = _invites.find(clientId);
+	if (check_invite == _invites.end())
+		return ;
 	_invites[clientId] = false;
+	auto check_op = _operators.find(clientId);
+	if (check_op == _operators.end())
+		return ;
 	_operators[clientId] = false;
 }
 void Channel::unkick(unsigned int clientId)
 {
+	auto check_kick = _kicked.find(clientId);
+	if (check_kick == _kicked.end())
+		return ;
 	_kicked[clientId] = false;
 }
 
@@ -52,6 +72,9 @@ void Channel::addOperator(unsigned int clientId)
 }
 void Channel::removeOperator(unsigned int clientId)
 {
+	auto check_op = _operators.find(clientId);
+	if (check_op == _operators.end())
+		return ;
 	_operators[clientId] = false;
 }
 
@@ -70,6 +93,15 @@ bool Channel::isMember(unsigned int clientId)
 		return (false);
 	if (it->second == false)
 		return (false);
+	return (true);
+}
+
+bool	Channel::isEmpty() {
+	auto check_member = _members.begin();
+	for (; check_member != _members.end(); ++check_member) {
+		if (check_member->second == true)
+			return (false);
+	}
 	return (true);
 }
 

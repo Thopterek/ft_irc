@@ -57,6 +57,7 @@ class Channel
 		std::string getTopic();
 		void setLimit(int newLimit);
 		int getLimit() const;
+		bool	isEmpty();
 
 		std::string getInfoString();
 

@@ -21,7 +21,13 @@ void part(Client& client, int fd, const std::vector<std::string> &param)
 	channel->removeMember(user.getFd());
 	channel->broadcast(msg, user);
 	user.respond(msg);
-	if (channel->getMembers().empty())
+	// if (channel->getMembers().empty()) {
+	// 	std::cout << "are we trying to delete the channels" << std::endl;
+	// 	client.deleteChannel(channelName);
+	// }
+	if (channel->isEmpty()) {
+		std::cout << "We will delete the channel" << std::endl;
 		client.deleteChannel(channelName);
+	}
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
