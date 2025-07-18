@@ -6,7 +6,11 @@ void part(Client& client, int fd, const std::vector<std::string> &param)
 {
 	std::cout << "\033[33m\033[1m" << "Command: PART started" << "\033[0m" << std::endl;
 	User& user = client[fd];
-
+    if (user.getStatus() != RegStatus::REGISTERED)
+    {
+        user.handleErrors(Errors::ERR_NOTREGISTERED, "");
+        return ;
+    }
 	if (param.empty())
 		return user.handleErrors(Errors::ERR_NEEDMOREPARAMS, "PART");
 

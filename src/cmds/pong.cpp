@@ -3,6 +3,11 @@
 
 void pong(Client& client, int fd, const std::vector<std::string>& param)
 {
+    if (client[fd].getStatus() != RegStatus::REGISTERED)
+    {
+        client[fd].handleErrors(Errors::ERR_NOTREGISTERED, "");
+        return ;
+    }
     if (param.empty())
         client[fd].handleErrors(Errors::ERR_NEEDMOREPARAMS, "PONG");
 

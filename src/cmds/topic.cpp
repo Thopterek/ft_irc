@@ -4,6 +4,11 @@
 void topic(Client& client, int fd, const std::vector<std::string> &param)
 {
 	User& user = client[fd];
+    if (user.getStatus() != RegStatus::REGISTERED)
+    {
+        user.handleErrors(Errors::ERR_NOTREGISTERED, "");
+        return ;
+    }
     if (param.empty())
     {
         user.handleErrors(Errors::ERR_NEEDMOREPARAMS, "TOPIC");
