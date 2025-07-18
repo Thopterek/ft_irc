@@ -35,8 +35,9 @@ void mode(Client& client, int fd, const std::vector<std::string> &param)
 
 	const std::string& channelName = param[0];
 	const std::string& modes = param[1];
+	std::cout << "\033[33m\033[1m" << "param func recieved << " << "\033[0m" << std::endl;
 	for(auto it = param.begin(); it != param.end(); ++it) {
-		std::cout << *it << " ";
+		std::cout << *it << " :newline_indicate" << std::endl;
 	}
 	Channel* channel = client.getChannelByName(channelName);
 	if (!channel)
@@ -64,8 +65,15 @@ void mode(Client& client, int fd, const std::vector<std::string> &param)
 				else if (!set) channel->setLimit(0);
 				break;
 			case 'o':
-				if(set && param.size() > 2 && getMemberNick(param[2], client) != "" && !channel->isKicked(getMemberFd(param[2], client)) && channel->isMember(getMemberFd(param[2], client))) channel->addOperator(getMemberFd(param[2], client));// but witht this atm no check for is member of channal or kicke or is kicked irnogred
-				else if (!set && param.size() > 2) channel->removeOperator(getMemberFd(param[2], client));
+				if(set && param.size() > 2 && getMemberNick(param[2], client) != "" && !channel->isKicked(getMemberFd(param[2], client)) && channel->isMember(getMemberFd(param[2], client)))
+				{
+					channel->addOperator(getMemberFd(param[2], client));
+
+				}
+				else if (!set && param.size() > 2 && getMemberNick(param[2], client) != "" && !channel->isKicked(getMemberFd(param[2], client)) && channel->isMember(getMemberFd(param[2], client))) 
+				{
+					channel->removeOperator(getMemberFd(param[2], client));
+				}
 				break;
 			default:
 				return user.handleErrors(Errors::ERR_UNKNOWNMODE, "MODE");/*std::string(1, c)*/

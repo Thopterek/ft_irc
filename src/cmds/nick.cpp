@@ -65,7 +65,7 @@ void    nick(Client& client, int fd, const std::vector<std::string>& param)
     if (err != Errors::ERR_NONE)
     {
         if (err == Errors::ERR_NONICKNAMEGIVEN)
-            user.handleErrors(err, "");
+            user.handleErrors(err, "NICK");
         else
             user.handleErrors(err, newNick);
 
@@ -78,19 +78,22 @@ void    nick(Client& client, int fd, const std::vector<std::string>& param)
     }
     if (client.ircCapitalize(user.getNickName()) == client.ircCapitalize(newNick))
         return ;
+        
     auto& channels { client.getAllChannels() };
     for (auto& member : channels)
     {
         Channel*    channel { member.second.get() };
-        // std::string channel_name = channels[member.first]->getChannelName();
         if (channel->isMember(user.getFd()))
         {
-            std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " NICK " + newNick + "\r\n";
+            std::cout << "User is a member of channel: " << std::endl;
+            //std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " NICK :" + newNick + "\r\n";//he maybe not
+            std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " NICK :" + channel->name + " " + newNick + "\r\n";
             channel->broadcast(msg, user);
-    
         }
     }
-    //user.respond(msg);
+    std::string msg2 = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " NICK :" + newNick + "\r\n";
+    user.respond(msg2);
     user.setOldNick(user.getNickName());
     user.setNickName(newNick);
+    std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
