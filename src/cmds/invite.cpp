@@ -29,8 +29,11 @@ void invite(Client& client, int fd, const std::vector<std::string> &param)
 
 	if (!channel->isOperator(user.getFd()))
 		return user.handleErrors(Errors::ERR_CHANOPRIVSNEEDED, channelName);
-	
-	if (channel->isKicked(user.getFd()))
+
+	if (channel->isMember(it->first))
+		return user.handleErrors(Errors::ERR_USERONCHANNEL, targetNick);
+
+	if (channel->isKicked(it->first))
 		return user.handleErrors(Errors::ERR_BANNEDFROMCHAN, channelName);
 
 	channel->inviteMember(it->first);

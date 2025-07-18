@@ -38,9 +38,9 @@ void	Channel::removeMember(unsigned int clientId)
 
 void	Channel::inviteMember(unsigned int clientId)
 {
-	auto check_invite = _invites.find(clientId);
-	if (check_invite == _invites.end())
-		return ;
+	// auto check_invite = _invites.find(clientId);
+	// if (check_invite == _invites.end())
+	// 	return ;
 	_invites[clientId] = true;
 }
 
