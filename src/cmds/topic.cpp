@@ -31,7 +31,7 @@ void topic(Client& client, int fd, const std::vector<std::string> &param)
         }
         return;
     }
-    if (!channel->isOperator(user.getFd()))
+    if (!channel->isOperator(user.getFd()) && channel->anyoneCanChangeTopic == false)
         return user.handleErrors(Errors::ERR_CHANOPRIVSNEEDED, channelName);
     std::string newTopic = param[1];
     channel->setTopic(newTopic);
