@@ -319,6 +319,18 @@ int	Bot::sendInitial() {
 		std::cerr << "Error: sending user failed" << std::endl;
 		return (1);
 	}
+	std::string topic = "TOPIC #" + bot_name + " :File transfer or private msg spam\r\n";
+	check = send(bot_fd, topic.c_str(), topic.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending user failed" << std::endl;
+		return (1);
+	}
+	std::string protect = "MODE #" + bot_name + " -t\r\n";
+	check = send(bot_fd, protect.c_str(), protect.size(), MSG_DONTWAIT);
+	if (check == -1) {
+		std::cerr << "Error: sending user failed" << std::endl;
+		return (1);
+	}	
 	return (0);
 }
 
