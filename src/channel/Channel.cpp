@@ -73,8 +73,10 @@ void Channel::addOperator(unsigned int clientId)
 void Channel::removeOperator(unsigned int clientId)
 {
 	auto check_op = _operators.find(clientId);
-	if (check_op == _operators.end())
-		return ;
+	if (check_op == _operators.end()) {
+		std::cout << "Client is not an operator" << std::endl;
+		return;
+	}
 	_operators[clientId] = false;
 }
 
@@ -82,6 +84,8 @@ bool Channel::isOperator(unsigned int clientId)
 {
 	auto it = _operators.find(clientId);
 	if (it == _operators.end())
+		return (false);
+	if (it->second == false)
 		return (false);
 	return (true);
 }

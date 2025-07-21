@@ -80,6 +80,7 @@ void mode(Client& client, int fd, const std::vector<std::string> &param)
 		}
 	}
 	std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " MODE " + channelName + " " + modes + "\r\n";
+	std::cout << "\033[33m\033[1m" << "msg to be sent: " << msg << "\033[0m" << std::endl;
 	channel->broadcast(msg, user);
 	user.respond(msg);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;

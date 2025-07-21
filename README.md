@@ -7,8 +7,10 @@ https://standards.nasa.gov/sites/default/files/standards/NASA/Baseline/0/nasa-gb
 https://medium.com/@mohcin.ghalmi/irc-server-internet-relay-chat-bd08e4f469f8
 
 
-/connect -4 -! -nocap -noautosendcmd 10.12.4.9 6667 123
+/connect -4 -! -nocap -noautosendcmd 10.12.7.9 6667 123
 
+
+10.12.7.9
 nc -v 10.12.4.X 6667
 PASS 123\r\n
 NICK test\r\n
