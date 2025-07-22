@@ -66,7 +66,7 @@ class   Client
     Client() = default;
     Client(const Client&) = delete;
     Client& operator=(const Client&) = delete;
-    ~Client() = default;
+    ~Client();
     User&   operator[](int);
 
     const std::unordered_map<int, User*>&   getUsers() const;
