@@ -22,8 +22,8 @@ void join(Client& client, int fd, const std::vector<std::string> &param)
 		return user.handleErrors(Errors::ERR_INVITEONLYCHAN, channelName);
 	if (!channel->getPassword().empty() && channel->getPassword() != password)
 		return user.handleErrors(Errors::ERR_BADCHANNELKEY, channelName);
-	if ((!(static_cast<size_t>(channel->getLimit()) < channel->getMembers().size()) && 
-        !channel->isOperator(user.getFd())) || channel->getLimit() != 0)
+	if ((!(static_cast<size_t>(channel->getLimit()) > channel->getMembers().size()) && 
+			!channel->isOperator(user.getFd())) && channel->getLimit() != 0)
 		return user.handleErrors(Errors::ERR_CHANNELISFULL, channelName);
 	if (channel->isMember(user.getFd()))
 		return user.handleErrors(Errors::ERR_USERONCHANNEL, channelName);
