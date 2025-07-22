@@ -7,6 +7,14 @@ User&   Client::operator[](int socketFd)
     return (*(m_users.at(socketFd)));
 }
 
+Client::~Client()
+{
+    if (!m_users.empty())
+        for (auto& user : m_users)
+            delete user.second;
+    m_users.clear();
+}
+
 const std::unordered_map<int, User*>&   Client::getUsers() const
 {
     return (m_users);
