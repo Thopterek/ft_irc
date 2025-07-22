@@ -304,7 +304,6 @@ void	Server::acceptingClient() {
 			std::string address = inet_ntoa(client_info.sin_addr);
 			struct hostent *client_host = gethostbyname(address.c_str());
 			std::string hostname = client_host->h_name;
-			std::cout << "\033[33m\033[1m" << "client with '" << client_fd << "' got accepted" << "\033[0m" << std::endl;
 			fresh.push_back(new_client);
 			clients.connect(client_fd, address, hostname, password);
 		}
@@ -344,9 +343,7 @@ Server::iter	Server::receivingData(iter it) {
 	buffer.resize(512);
 	int check_receive = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
 	if (check_receive == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
-		std::cout << "double check it was: " << it->fd << std::endl;
 		runError("recv didn't proccess the message", it->fd);
-		recvErrno();
 		clients.disconnect(it->fd);
 		if (close(it->fd) != 0)
 			runError("close in receivingData", it->fd);
@@ -367,7 +364,6 @@ Server::iter	Server::receivingData(iter it) {
 	buffer.resize(check_receive);
 	if (buffer.size() > 2) {
 		std::string::size_type line_feed = buffer.find("\r\n");
-		std::cout << BLUE << buffer << RESET << std::endl;
 		if (line_feed == std::string::npos)
 			clients[it->fd].buffer(buffer.data());
 		else {

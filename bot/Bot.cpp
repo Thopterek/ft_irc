@@ -132,11 +132,11 @@ void	Bot::setupFile() {
 	}
 	else
 		file_type = FileType::BINARY;
-	printRequest("write a description between 1 and 510 characters for it");
+	printRequest("write a description between 1 and 100 characters for it");
 	while (file.second == "" && g_shutdown == 0) {
 		checkEof();
 		std::getline(std::cin, file.second);
-		if ((file.second.size() > 510 || file.second.size() < 1) && g_shutdown == 0) {
+		if ((file.second.size() > 100 || file.second.size() < 1) && g_shutdown == 0) {
 			printMistake("Description is not in range");
 			file.second = "";
 		}
@@ -407,8 +407,6 @@ Bot::iter	Bot::recvServer(iter it) {
 	}
 	else {
 		buffer.resize(check);
-		for (auto print = buffer.begin(); print != buffer.end(); ++print)
-			std::cout << *print << std::flush;
 		if (buffer.size() > joined.size()) {
 			if (buffer.find(joined) != std::string_view::npos)
 				sendManual();
