@@ -27,7 +27,6 @@ User::User(int fd, std::string_view ip, std::string_view hostName, std::string_v
     m_errors.emplace(Errors::ERR_CHANOPRIVSNEEDED, ":You're not channel operator");
     m_errors.emplace(Errors::ERR_UNKNOWNCOMMAND, ":Unknown command");
     m_errors.emplace(Errors::ERR_INPUTTOOLONG, ":Input line wass too long");
-    // newly added
     m_errors.emplace(Errors::ERR_BADCHANNELKEY, ":Cannot join channel (+k)");
     m_errors.emplace(Errors::ERR_BANNEDFROMCHAN, ":Cannot join channel (+b)");
     m_errors.emplace(Errors::ERR_BADCHANMASK, ":Bad Channel Mask");
@@ -157,7 +156,6 @@ User::buildMsg(Errors errCode, const std::string& cmd, const std::string& errMsg
     if (tmp.empty())
         tmp = "*";
     serverPrefix += (" " + errorCode + " " + tmp);
-    std::cout << serverPrefix + temp + errMsg << std::endl;
     return (serverPrefix + temp + errMsg + "\r\n");
 }
 

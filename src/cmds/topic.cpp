@@ -30,7 +30,8 @@ void topic(Client& client, int fd, const std::vector<std::string> &param)
             user.handleErrors(Errors::ERR_NOTOPIC, channelName);
         else
         {
-            std::string msg = ":" + user.getNickName() + " 332 " + user.getUserName() + " " + channelName + " :" + topic + "\r\n";
+            std::string msg = ":" + user.getNickName() + " 332 " + 
+                user.getUserName() + " " + channelName + " :" + topic + "\r\n";
             user.respond(msg);
         }
         return;
@@ -39,7 +40,9 @@ void topic(Client& client, int fd, const std::vector<std::string> &param)
         return user.handleErrors(Errors::ERR_CHANOPRIVSNEEDED, channelName);
     std::string newTopic = param[1];
     channel->setTopic(newTopic);
-    std::string msg = ":" + user.getUserName() + " 332 " + user.getNickName() + " " + channelName + " :" + channel->getTopic() + "\r\n";
+    std::string msg = ":" + user.getUserName() + " 332 " + user.getNickName() + 
+        " " + channelName + " :" + channel->getTopic() + "\r\n";
     channel->broadcast(msg, user);
     user.respond(msg);
 }
+

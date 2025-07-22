@@ -3,7 +3,6 @@
 
 void invite(Client& client, int fd, const std::vector<std::string> &param)
 {
-	std::cout << "\033[33m\033[1m" << "Command: INVITE started" << "\033[0m" << std::endl;
 	User& user = client[fd];
     if (user.getStatus() != RegStatus::REGISTERED)
     {
@@ -42,9 +41,11 @@ void invite(Client& client, int fd, const std::vector<std::string> &param)
 
 	channel->inviteMember(it->first);
 
-	std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " INVITE " + targetNick + " :" + channelName + "\r\n";
+	std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + 
+        user.getHostName() + " INVITE " + targetNick + " :" + channelName + "\r\n";
 	it->second->respond(msg);
-	std::string replyToInviter = ":" + user.getServerName() + " 341 " + user.getNickName() + " " + targetNick + " " + channelName + "\r\n";
+	std::string replyToInviter = ":" + user.getServerName() + " 341 " + 
+        user.getNickName() + " " + targetNick + " " + channelName + "\r\n";
 	user.respond(replyToInviter);
-	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
+

@@ -17,20 +17,16 @@ class Channel;
 
 class User;
 
-/*
-  fetching of particular message
-  on non command and not registered
-*/
 enum class Errors
 {
     ERR_NONE = 0,
     ERR_NICKMORETHAN9CHARS = 1,
     ERR_REGISTERING = 2,
-    ERR_NOTOPIC = 331, //check on this
-    ERR_INVITEONLYCHAN = 473, //check on this
+    ERR_NOTOPIC = 331,
+    ERR_INVITEONLYCHAN = 473,
     ERR_UNKNOWNERROR = 400,
     ERR_NOSUCHNICK = 401,
-    ERR_NOSUCHCHANNEL = 403, // CHECK ON THIS
+    ERR_NOSUCHCHANNEL = 403,
     ERR_CANNOTSENDTOCHAN = 404,
     ERR_TOOMANYTARGETS = 407,
     ERR_NORECIPIENT = 411,
@@ -42,7 +38,7 @@ enum class Errors
     ERR_NICKNAMEINUSE = 433,
     ERR_NICKCOLLISION = 436,
     ERR_USERNOTINCHANNEL = 441, // CHECK ON THIS
-    ERR_NOTONCHANNEL = 442, // CHECK ON THIS
+    ERR_NOTONCHANNEL = 442, // CHECK
     ERR_USERONCHANNEL = 443, // CHECK ON THIS
     ERR_NOTREGISTERED = 451,
     ERR_NEEDMOREPARAMS = 461,
@@ -50,19 +46,15 @@ enum class Errors
     ERR_PASSWDMISMATCH = 464,
     ERR_CHANOPRIVSNEEDED = 482, // CHECK ON THIS
     ERR_UNKNOWNMODE = 501,
-    // here are added
     ERR_BADCHANNELKEY = 476,
     ERR_BANNEDFROMCHAN = 474,
     ERR_BADCHANMASK = 475,
     ERR_CHANNELISFULL = 471,
     ERR_NOTOPLEVEL = 413
-    // ths is stop
-    //RPL_AWAY = 301
 };
 
 class   Client
 {
-    int                             m_userCount {};
     std::unordered_map<int, User*>  m_users;
     static int     ircToupper(int c);
     /*

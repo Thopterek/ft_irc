@@ -21,7 +21,6 @@ static void    directMessage(const std::vector<std::string>& params
     auto    users { client.getUsers() };
     for (const auto& user : users)
     {
-        // Nicknames are unique in the server.
         if (client.ircCapitalize(target) == 
                 client.ircCapitalize(user.second->getNickName()))
         {
@@ -38,10 +37,8 @@ static void messageChannel(const std::vector<std::string>& params,
 {
     User&   user { client[fd] };
     const std::string&  target { params.at(0) };
-    // auto    channels { user.getChannels() };
     std::string channelName = params[0];
     Channel* channel = client.getChannelByName(channelName);
-    std::cout << "Channels: " << std::endl;
     if (channel == NULL)
     {
         user.handleErrors(Errors::ERR_CANNOTSENDTOCHAN, channelName);
@@ -64,13 +61,11 @@ static void messageChannel(const std::vector<std::string>& params,
         user.handleErrors(Errors::ERR_BANNEDFROMCHAN, channelName);
         return ;
     }
-    std::cout << "Message to be sent: " << msg << std::endl;
     channel->broadcast(msg, user);
 }
 
 void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
 {
-    std::cout << "\033[33m\033[1m" << "Command: PRIVMSG started" << "\033[0m" << std::endl;
     User&   user { client[fd] };
 
     if (user.getStatus() != RegStatus::REGISTERED)
@@ -97,5 +92,4 @@ void    privmsg(Client& client, int fd, const std::vector<std::string> &params)
         messageChannel(temp_params, fd, client);
     else
         user.handleErrors(Errors::ERR_NOSUCHNICK, params.at(0));
-    std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }

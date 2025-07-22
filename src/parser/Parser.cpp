@@ -8,18 +8,13 @@ Parser::Parser()
     m_cmds.emplace("NICK", nick);
     m_cmds.emplace("USER", user);
     m_cmds.emplace("PRIVMSG", privmsg);
-    /*
-        channel side of things
-    */
     m_cmds.emplace("INVITE", invite);
     m_cmds.emplace("JOIN", join);
     m_cmds.emplace("MODE", mode);
     m_cmds.emplace("KICK", kick);
     m_cmds.emplace("QUIT", quit);
     m_cmds.emplace("PART", part);
-    // m_cmds.emplace("CAP", handleCap);
     m_cmds.emplace("TOPIC", topic);
-    // m_cmds.emplace("WHO", handleWho);
     m_cmds.emplace("PING", ping);
     m_cmds.emplace("PONG", pong);
 }
@@ -35,10 +30,8 @@ std::vector<std::string>    Parser::tokenize(std::string_view msg)
         throw std::runtime_error("Client messages must not include a source");
     while (iss >> params)
     {
-        //check for trailing prefix
         if (params.front() == ':')
         {
-            // std::string trailingPrefix = params.substr(1);
             std::string rest;
             std::getline(iss, rest);
             tokens.push_back(params + rest);
