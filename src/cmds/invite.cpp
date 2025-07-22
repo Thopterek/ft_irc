@@ -48,7 +48,3 @@ void invite(Client& client, int fd, const std::vector<std::string> &param)
 	user.respond(replyToInviter);
 	std::cout << "\033[32m" << "command went through succefully" << "\033[0m" << std::endl;
 }
-
-
-// RPL_INVITING = "341" // Invite message                   
-// RPL_AWAY = "301" // Away message

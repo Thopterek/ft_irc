@@ -25,7 +25,6 @@ void topic(Client& client, int fd, const std::vector<std::string> &param)
 		return user.handleErrors(Errors::ERR_USERONCHANNEL, channelName);
     if (param.size() == 1)
     {
-        std::cout << "in on param" << std::endl;
         std::string topic = channel->getTopic();
         if (topic.empty())
             user.handleErrors(Errors::ERR_NOTOPIC, channelName);

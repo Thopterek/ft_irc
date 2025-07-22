@@ -13,7 +13,6 @@ void join(Client& client, int fd, const std::vector<std::string> &param)
 	std::string password = (param.size() > 1) ? param[1] : "";
 	Channel* channel = client.getChannelByName(channelName);
 	if (channel == NULL) {
-		std::cout << "Does it try to create a channel?" << std::endl;
 		channel = client.createChannel(channelName, user.getFd());
 		channel->addOperator(user.getFd());
 	}

@@ -23,24 +23,15 @@ void Channel::addMember(unsigned int clientId)
 
 void	Channel::removeMember(unsigned int clientId)
 {
-	std::cout << "the beginning of remove member" << std::endl;
 	auto check_member = _members.find(clientId);
 	if (check_member == _members.end())
 		return ;
 	_members[clientId] = false;
-	// auto check_invite = _invites.find(clientId);
-	// if (check_invite == _invites.end())
-	// 	return ;
 	_invites[clientId] = false;
-	// _members.erase(clientId);
-	std::cout << "THE END OF REMOVE MEMBER" << std::endl;
 }
 
 void	Channel::inviteMember(unsigned int clientId)
 {
-	// auto check_invite = _invites.find(clientId);
-	// if (check_invite == _invites.end())
-	// 	return ;
 	_invites[clientId] = true;
 }
 
@@ -74,7 +65,6 @@ void Channel::removeOperator(unsigned int clientId)
 {
 	auto check_op = _operators.find(clientId);
 	if (check_op == _operators.end()) {
-		std::cout << "Client is not an operator" << std::endl;
 		return;
 	}
 	_operators[clientId] = false;
@@ -152,13 +142,13 @@ bool Channel::isInviteOnly() const {
 
 //right now no protection case for use with privmsg
 void Channel::broadcast(const std::string& msg, User &user) {
-	std::string actual = msg;
+	std::string actual = msg + "\r\n";
 	for (std::map<unsigned int, bool>::iterator it = _members.begin(); it != _members.end(); ++it) {
 		if (!it->second)
 			continue;
 		if (it->first == static_cast<unsigned int>(user.getFd()))
 			continue;
-		if (send(it->first, actual.c_str(), actual.size(), 0) < 0)
+		if (send(it->first, actual.c_str(), actual.size(), MSG_DONTWAIT) < 0)
 		{
 			std::cerr << "Error: send in broadcoast failed" << std::endl;
 			perror("send");
@@ -180,21 +170,6 @@ void Channel::setTopic(std::string newTopic)
 {
 	topic = newTopic;
 }
-	// while (iss >> params) maybe something like this extra neede
-    // {
-    //     //check for trailing prefix
-    //     if (params.front() == ':')
-    //     {
-    //         // std::string trailingPrefix = params.substr(1);
-    //         std::string rest;
-    //         std::getline(iss, rest);
-    //         tokens.push_back(params + rest);
-    //         break ;
-    //     }
-    //     tokens.push_back(params);
-    // }
-    // return (tokens);
-
 
 std::string Channel::getTopic()
 {

@@ -12,6 +12,7 @@ void quit(Client& client, int fd, const std::vector<std::string> &param)
 	for (auto it = client.getAllChannels().begin(); it != client.getAllChannels().end();)
 	{
 		Channel* chan = it->second.get();
+		std::cout << "Checking channel: " << chan->name << std::endl;
 		if (chan->isMember(user.getFd()))
 		{
 			std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " QUIT :" + it->first + reason + "\r\n";
