@@ -348,7 +348,8 @@ void	Bot::acceptUser() {
 	else {
 		int flag = fcntl(client_fd, F_SETFL, O_NONBLOCK);
 		if (flag == -1) {
-			close(client_fd);
+			if (close(client_fd) != 0)
+				std::cerr << "Error: fcntl failed to be se properly in acceptUser" << std::endl;
 			return ;
 		}
 		else {
@@ -373,14 +374,16 @@ Bot::iter	Bot::recvUser(iter it) {
 	int check_receive = recv(it->fd, buffer.data(), buffer.size(), MSG_DONTWAIT);
 	if (check_receive == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
 		std::cerr << "Client with fd: " << it->fd << " had some error" << std::endl;
-		close(it->fd);
+		if (close(it->fd) != 0)
+			std::cerr << "Error: close on recvUser failed '-1'" << std::endl;
 		buffer.clear();
 		it = polling.erase(it);
 		return (it);
 	}
 	else if (check_receive == 0) {
 		std::cout << "Client with fd: '" << it->fd << "' disconnected" << std::endl;
-		close(it->fd);
+		if (close(it->fd) != 0)
+			std::cerr << "Error: close on recvUser failed '0'" << std::endl;
 		buffer.clear();
 		it = polling.erase(it);
 		return (it);
