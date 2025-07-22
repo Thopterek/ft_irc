@@ -152,13 +152,13 @@ bool Channel::isInviteOnly() const {
 
 //right now no protection case for use with privmsg
 void Channel::broadcast(const std::string& msg, User &user) {
-	std::string actual = msg + "\r\n";
+	std::string actual = msg;
 	for (std::map<unsigned int, bool>::iterator it = _members.begin(); it != _members.end(); ++it) {
 		if (!it->second)
 			continue;
 		if (it->first == static_cast<unsigned int>(user.getFd()))
 			continue;
-		if (send(it->first, actual.c_str(), actual.size(), MSG_DONTWAIT) < 0)
+		if (send(it->first, actual.c_str(), actual.size(), 0) < 0)
 		{
 			std::cerr << "Error: send in broadcoast failed" << std::endl;
 			perror("send");

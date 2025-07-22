@@ -52,7 +52,8 @@ void mode(Client& client, int fd, const std::vector<std::string> &param)
 		char c = modes[i];
 		if (c == '+') { set = true; continue; }
 		if (c == '-') { set = false; continue; }
-	
+		if ((modes[i] == 'i' || modes[i] == 't' || modes[i] == 'k' || modes[i] == 'l' || modes[i] == 'o') && modes.size() > 2)
+			return user.handleErrors(Errors::ERR_UNKNOWNMODE, "MODE");
 		switch (c) {
 			case 'i': channel->setInviteOnly(set); break;
 			case 't': channel->setTopicProtection(set); break;
@@ -66,17 +67,12 @@ void mode(Client& client, int fd, const std::vector<std::string> &param)
 				break;
 			case 'o':
 				if(set && param.size() > 2 && getMemberNick(param[2], client) != "" && !channel->isKicked(getMemberFd(param[2], client)) && channel->isMember(getMemberFd(param[2], client)))
-				{
 					channel->addOperator(getMemberFd(param[2], client));
-
-				}
 				else if (!set && param.size() > 2 && getMemberNick(param[2], client) != "" && !channel->isKicked(getMemberFd(param[2], client)) && channel->isMember(getMemberFd(param[2], client))) 
-				{
 					channel->removeOperator(getMemberFd(param[2], client));
-				}
 				break;
 			default:
-				return user.handleErrors(Errors::ERR_UNKNOWNMODE, "MODE");/*std::string(1, c)*/
+				return user.handleErrors(Errors::ERR_UNKNOWNMODE, "MODE");
 		}
 	}
 	std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " MODE " + channelName + " " + modes + "\r\n";

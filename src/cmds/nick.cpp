@@ -87,7 +87,7 @@ void    nick(Client& client, int fd, const std::vector<std::string>& param)
         {
             std::cout << "User is a member of channel: " << std::endl;
             //std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " NICK :" + newNick + "\r\n";//he maybe not
-            std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " NICK :" + channel->name + " " + newNick + "\r\n";
+            std::string msg = ":" + user.getNickName() + "!" + user.getUserName() + "@" + user.getHostName() + " NICK :" + newNick + "\r\n";
             channel->broadcast(msg, user);
         }
     }
