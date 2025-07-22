@@ -48,7 +48,12 @@ static void messageChannel(const std::vector<std::string>& params,
         return ;
     }
     const std::string  targetMessage { target + " :" + params.at(1) + "\r\n" };
-    const std::string   msg { user.getSource() + " PRIVMSG " + targetMessage };
+    std::string   msg { user.getSource() + " PRIVMSG " + targetMessage };
+    if (channel->isOperator(user.getFd()) == true) {
+        auto it = msg.find_first_of(":");
+        if (it != std::string::npos)
+            msg.insert(it + 1, "@");
+    }
     if (channel->isMember(user.getFd()) == false)
     {
         user.handleErrors(Errors::ERR_NOTONCHANNEL, channelName);
@@ -59,6 +64,7 @@ static void messageChannel(const std::vector<std::string>& params,
         user.handleErrors(Errors::ERR_BANNEDFROMCHAN, channelName);
         return ;
     }
+    std::cout << "Message to be sent: " << msg << std::endl;
     channel->broadcast(msg, user);
 }
 
