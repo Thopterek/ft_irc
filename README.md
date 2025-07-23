@@ -1,3 +1,7 @@
+<h1>The description needs to be done but look</h1>
+
+<img width="672" height="186" alt="ft_irc" src="https://github.com/user-attachments/assets/3650840e-c5bf-4d04-ba4e-18a69cecba3f" />
+
 https://datatracker.ietf.org/doc/html/rfc2813
 
 https://www.rfc-editor.org/rfc/rfc2812.html
