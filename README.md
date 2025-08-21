@@ -1,6 +1,6 @@
 <h1>IRC Server working with reference irssi client</h1>
 
-done by myself (<strong>@Thopterek</strong>), <strong>@Rexbrainz</strong> and <strong>@cuhlig</strong>, below you can see the basic usage showcase
+done by myself (<strong>@Thopterek</strong>), <strong>@Rexbrainz</strong> and <strong>@cuhlig42</strong>, below you can see the basic usage showcase
 
 <img width="1709" height="471" alt="showcase" src="https://github.com/user-attachments/assets/34766e21-19d1-428e-93b8-2b99fb7d7bdb" />
 
