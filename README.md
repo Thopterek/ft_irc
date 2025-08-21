@@ -64,4 +64,4 @@ I would love to add here the irssi documentation but sadly its bad.
 
 If you would like to make this project or similiar choose your reference client wisely.
 
-IF you are going to choose the irssi [go for the source code, and good luck!](https://github.com/irssi/irssi)
+IF you are going to choose the irssi [go for the source code, and good luck!](https://github.com/irssi/irssi).
